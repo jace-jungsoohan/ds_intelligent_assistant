@@ -53,7 +53,7 @@ Available tables (always use fully qualified names with backticks):
 
 2. `willog-prod-data-gold.rag.mart_sensor_detail` (Big Data / Granular)
    - Purpose: Dynamic Threshold Queries (e.g. "Shock > 7G"), Multi-variable Correlation, Directional Analysis.
-   - Columns: event_date, shock_g, temperature, humidity, acc_x, acc_y, acc_z, tilt_x, tilt_y, latitude, longitude
+   - Columns: event_date, shock_g, temperature, humidity, acc_x, acc_y, acc_z, tilt_x, tilt_y, lat, lon
 
 3. `willog-prod-data-gold.rag.mart_risk_heatmap` (Geospatial)
    - Purpose: "Heatmap", "Risk Map", "Where do shocks occur?".

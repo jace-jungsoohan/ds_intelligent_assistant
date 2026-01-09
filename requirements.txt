@@ -1,0 +1,8 @@
+
+langchain
+langchain-google-vertexai
+langchain-community
+google-cloud-bigquery
+pandas
+pydantic-settings
+db-dtypes

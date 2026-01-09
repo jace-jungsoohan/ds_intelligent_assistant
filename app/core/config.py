@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     PROJECT_ID: str = "willog-prod-data-gold"
     DATASET_ID: str = "rag"
-    LOCATION: str = "us-central1"  # For Vertex AI LLM
+    LOCATION: str = "asia-northeast3"  # For Vertex AI LLM (Seoul)
     BQ_LOCATION: str = "asia-northeast3"  # For BigQuery (Seoul)
     
     # Optional: LLM settings

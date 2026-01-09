@@ -53,6 +53,14 @@ Rules:
 - Respond ONLY with the SQL query. Do not wrap it in markdown code blocks.
 - Current Date: {current_date}
 
+Code Mapping Guide (Interpret location names as follows):
+- Shanghai, Sanghai, 상해, 상하이 -> 'CNSHG'
+- Osaka, 오사카 -> 'JPOSA'
+- Rizhao, 일조, 리자오 -> 'CNRZH'
+- Lianyungang, 연운항 -> 'CNLYG'
+- Ningbo, 닝보 -> 'CNNBG'
+- Vietnam, 베트남 -> (No specific code, search for destination like '%VN%' or strictly match if code known)
+
 Question: {question}
 SQL Query:
 """

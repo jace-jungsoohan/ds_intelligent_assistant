@@ -8,19 +8,15 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.core.config import settings
 
-def sync_mart_tables():
+def sync_whitepaper_mart():
     """
-    Creates Materialized Mart Tables in RAG dataset.
-    
-    Data Sources:
-    1. view_transport_stats -> rag.corning_transport (Master transport data)
-    2. view_issue_stats     -> rag.corning_merged (Detailed sensor/shock logs)
-    3. view_sensor_stats    -> rag.corning_merged (Detailed sensor timeseries)
+    Builds the Advanced Data Mart defined in the Whitepaper.
+    FIXED: Syntax errors in BigQuery SQL (Comment interference, alias visibility).
     """
     client = bigquery.Client(project=settings.PROJECT_ID)
     dataset_id = f"{settings.PROJECT_ID}.{settings.DATASET_ID}"
     
-    print(f"Building Scalable Mart Tables in: {dataset_id}")
+    print(f"🚀 Building Whitepaper Data Mart in: {dataset_id}")
     
     # Check dataset existence
     try:
@@ -29,96 +25,151 @@ def sync_mart_tables():
         print(f"Error: Dataset {dataset_id} not found.")
         return
 
-    # 1. Transport Stats
-    # Source: corning_transport (Efficient for counting total shipments)
-    q1 = f"""
-    CREATE OR REPLACE TABLE `{dataset_id}.view_transport_stats`
-    PARTITION BY date
-    CLUSTER BY destination, product
+    # 1. Mart Logistics Master
+    q_master = f"""
+    CREATE OR REPLACE TABLE `{dataset_id}.mart_logistics_master`
+    PARTITION BY departure_date
+    CLUSTER BY destination, product, risk_level
     AS
-    SELECT
-      DATE(departure_time) as date,
-      pod as destination,
-      product_name as product,
-      shipmode as transport_mode,
-      CONCAT(pol, '-', pod) as transport_path,
-      COUNT(*) as total_volume,
-      COUNT(*) as transport_count,
-      COUNTIF(SAFE_CAST(is_damaged AS INT64) > 0) as issue_count
-    FROM `{dataset_id}.corning_transport`
-    WHERE departure_time IS NOT NULL
-    GROUP BY 1, 2, 3, 4, 5;
-    """
-    
-    # 2. Issue Stats
-    # Source: corning_merged (Has direct 'acc_over5', 'acc_over10', 'shock_high' fields)
-    q2 = f"""
-    CREATE OR REPLACE TABLE `{dataset_id}.view_issue_stats`
-    CLUSTER BY destination
-    AS
-    SELECT
-      shipmode as transport_mode,
-      package as package_type,
-      pod as destination,
-      'End-to-End' as path_segment,
-      
-      -- Calculate rates based on unique shipments having issues
-      -- We group by shipment code first to see if it had any issue
-      COUNTIF(max_acc_over5 > 0) / COUNT(*) as deviation_rate_5g,
-      COUNTIF(max_acc_over10 > 0) / COUNT(*) as deviation_rate_10g,
-      
-      AVG(max_shock) as cumulative_shock,
-      SUM(CASE WHEN max_shock > 0 THEN 1 ELSE 0 END) as shock_count
-      
-    FROM (
+    WITH sensor_metrics AS (
         SELECT 
-            code, shipmode, package, pod,
-            MAX(acc_over5) as max_acc_over5,
-            MAX(acc_over10) as max_acc_over10,
-            MAX(shock_high) as max_shock
+            code,
+            -- Cumulative Fatigue
+            SUM(CASE WHEN shock_high > 2 THEN POW(shock_high, 1.5) ELSE 0 END) as cumulative_shock_index,
+            MAX(shock_high) as max_shock_g,
+            AVG(shock_high) as avg_shock_g,
+            -- Excursions (Multiplying count by 10 for minutes, assuming 10min interval)
+            (COUNTIF(temperature < 0 OR temperature > 25) * 10) as temp_excursion_duration_est_min
         FROM `{dataset_id}.corning_merged`
-        GROUP BY 1, 2, 3, 4
+        GROUP BY 1
     )
-    GROUP BY 1, 2, 3, 4;
+    SELECT
+      DATE(t.departure_time) as departure_date,
+      t.code,
+      t.pol,
+      t.pod as destination,
+      t.product_name as product,
+      t.package as package_type,
+      t.shipmode as transport_mode,
+      
+      c.filter as category_filter,
+      
+      COALESCE(s.cumulative_shock_index, 0) as cumulative_shock_index,
+      COALESCE(s.max_shock_g, 0) as max_shock_g,
+      COALESCE(s.avg_shock_g, 0) as avg_shock_g,
+      COALESCE(s.temp_excursion_duration_est_min, 0) as temp_excursion_duration_min,
+      
+      t.is_damaged,
+      
+      CASE 
+        WHEN t.is_damaged THEN 'Critical'
+        WHEN s.cumulative_shock_index > 500 OR s.temp_excursion_duration_est_min > 60 THEN 'High'
+        WHEN s.max_shock_g > 8 THEN 'Medium'
+        ELSE 'Low'
+      END as risk_level
+      
+    FROM `{dataset_id}.corning_transport` t
+    LEFT JOIN sensor_metrics s ON t.code = s.code
+    LEFT JOIN `{dataset_id}.view_category` c ON t.code = c.code 
+    WHERE t.departure_time IS NOT NULL;
     """
     
-    # 3. Sensor Stats
-    # Source: corning_merged (Real timeseries temperature/humidity data)
-    q3 = f"""
-    CREATE OR REPLACE TABLE `{dataset_id}.view_sensor_stats`
-    PARTITION BY date
-    CLUSTER BY destination
+    # 2. Mart Sensor Detail
+    q_detail = f"""
+    CREATE OR REPLACE TABLE `{dataset_id}.mart_sensor_detail`
+    PARTITION BY event_date
+    CLUSTER BY destination, code
     AS
     SELECT
-      DATE(device_datetime) as date,
-      shipmode as transport_mode,
-      pod as destination,
-      
-      AVG(temperature) as avg_temp,
-      MIN(temperature) as min_temp,
-      MAX(temperature) as max_temp,
-      AVG(humidity) as avg_humidity,
-      
-      COUNTIF(alarm_status != 'Normal') as shock_alert_count
-      
+        DATE(device_datetime) as event_date,
+        device_datetime as event_timestamp,
+        code,
+        pod as destination,
+        
+        temperature,
+        humidity,
+        shock_high as shock_g,
+        
+        acc as acc_resultant,
+        accx as acc_x,
+        accy as acc_y,
+        accz as acc_z,
+        tiltx as tilt_x,
+        tilty as tilt_y,
+        
+        lat,
+        lon,
+        
+        CASE 
+            WHEN acc < 0.2 THEN 'Static'
+            ELSE 'Moving'
+        END as status
+        
     FROM `{dataset_id}.corning_merged`
-    WHERE device_datetime IS NOT NULL
+    WHERE device_datetime IS NOT NULL;
+    """
+    
+    # 3. Mart Risk Heatmap
+    q_heatmap = f"""
+    CREATE OR REPLACE TABLE `{dataset_id}.mart_risk_heatmap`
+    CLUSTER BY location_label
+    AS
+    SELECT
+        ROUND(lat, 2) as lat_center,
+        ROUND(lon, 2) as lon_center,
+        ANY_VALUE(location) as location_label,
+        
+        COUNT(*) as total_logs,
+        AVG(shock_high) as avg_shock_intensity,
+        MAX(shock_high) as max_shock_intensity,
+        COUNTIF(shock_high > 5) as high_impact_events,
+        
+        (COUNTIF(shock_high > 5) / COUNT(*)) * AVG(shock_high) as risk_score
+        
+    FROM `{dataset_id}.corning_merged`
+    WHERE lat IS NOT NULL AND lon IS NOT NULL
+    GROUP BY 1, 2
+    HAVING total_logs > 10;
+    """
+    
+    # 4. Mart Quality Matrix
+    q_matrix = f"""
+    CREATE OR REPLACE TABLE `{dataset_id}.mart_quality_matrix`
+    AS
+    SELECT
+        transport_mode,
+        package_type,
+        CONCAT(pol, '-', destination) as route,
+        
+        COUNT(*) as total_shipments,
+        countif(is_damaged) / count(*) as damage_rate,
+        
+        AVG(cumulative_shock_index) as avg_fatigue_score,
+        
+        100 - (countif(risk_level = 'High' OR risk_level = 'Critical') / count(*) * 100) as safety_score
+        
+    FROM `{dataset_id}.mart_logistics_master`
     GROUP BY 1, 2, 3;
     """
 
-    # Execute
-    for name, query in [("view_transport_stats", q1), ("view_issue_stats", q2), ("view_sensor_stats", q3)]:
-        print(f"Building table: {name}...")
+    tasks = [
+        ("mart_logistics_master", q_master),
+        ("mart_sensor_detail", q_detail),
+        ("mart_risk_heatmap", q_heatmap),
+        ("mart_quality_matrix", q_matrix)
+    ]
+
+    for name, query in tasks:
+        print(f"🏗️ Building {name}...")
         try:
             client.query(query).result()
             print(f"✅ {name} built successfully.")
             
-            verify_q = f"SELECT COUNT(*) as cnt FROM `{dataset_id}.{name}`"
-            df = client.query(verify_q).to_dataframe()
+            df = client.query(f"SELECT COUNT(*) as cnt FROM `{dataset_id}.{name}`").to_dataframe()
             print(f"   -> Rows: {df['cnt'][0]}")
             
         except Exception as e:
             print(f"❌ Failed to build {name}: {e}")
 
 if __name__ == "__main__":
-    sync_mart_tables()
+    sync_whitepaper_mart()

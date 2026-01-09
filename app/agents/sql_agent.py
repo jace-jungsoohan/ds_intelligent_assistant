@@ -39,27 +39,35 @@ Your goal is to answer user questions by generating a valid Standard SQL query.
 Dataset: `willog-prod-data-gold.rag`
 
 Available tables (always use fully qualified names with backticks):
-- `willog-prod-data-gold.rag.view_transport_stats`: Transport volume data
-  Columns: date (DATE), destination (STRING), product (STRING), transport_mode (STRING), transport_path (STRING), total_volume (INT64), transport_count (INT64), issue_count (INT64)
 
-- `willog-prod-data-gold.rag.view_issue_stats`: Issue/shock statistics
-  Columns: transport_mode (STRING), package_type (STRING), destination (STRING), path_segment (STRING), deviation_rate_5g (FLOAT64), deviation_rate_10g (FLOAT64), cumulative_shock (FLOAT64), shock_count (INT64)
+1. `willog-prod-data-gold.rag.mart_logistics_master` (Fact Table)
+   - Purpose: Master transport stats, volume, damage rates, RISK LEVELS, FATIGUE.
+   - Columns: 
+     - code (STRING): Shipment ID
+     - departure_date (DATE): Partition Key
+     - destination (STRING), product (STRING), transport_mode (STRING)
+     - cumulative_shock_index (FLOAT): "Fatigue" or "Cumulative Stress" score
+     - risk_level (STRING): 'Low', 'Medium', 'High', 'Critical'
+     - temp_excursion_duration_min (INT64): Minutes outside valid temp range
+     - is_damaged (BOOL): Damage flag
 
-- `willog-prod-data-gold.rag.view_sensor_stats`: Sensor data (temperature, humidity)
-  Columns: date (DATE), transport_mode (STRING), destination (STRING), avg_temp (FLOAT64), min_temp (FLOAT64), max_temp (FLOAT64), avg_humidity (FLOAT64), shock_alert_count (INT64)
+2. `willog-prod-data-gold.rag.mart_sensor_detail` (Big Data / Granular)
+   - Purpose: Dynamic Threshold Queries (e.g. "Shock > 7G"), Multi-variable Correlation, Directional Analysis.
+   - Columns: event_date, shock_g, temperature, humidity, acc_x, acc_y, acc_z, tilt_x, tilt_y, latitude, longitude
 
-Rules:
-- ALWAYS use fully qualified table names with backticks: `willog-prod-data-gold.rag.table_name`
-- Respond ONLY with the SQL query. Do not wrap it in markdown code blocks.
-- Current Date: {current_date}
+3. `willog-prod-data-gold.rag.mart_risk_heatmap` (Geospatial)
+   - Purpose: "Heatmap", "Risk Map", "Where do shocks occur?".
+   - Columns: lat_center, lon_center, location_label, risk_score, high_impact_events
 
-Code Mapping Guide (Interpret location names as follows):
-- Shanghai, Sanghai, 상해, 상하이 -> 'CNSHG'
-- Osaka, 오사카 -> 'JPOSA'
-- Rizhao, 일조, 리자오 -> 'CNRZH'
-- Lianyungang, 연운항 -> 'CNLYG'
-- Ningbo, 닝보 -> 'CNNBG'
-- Vietnam, 베트남 -> (No specific code, search for destination like '%VN%' or strictly match if code known)
+4. `willog-prod-data-gold.rag.mart_quality_matrix` (Benchmarking)
+   - Purpose: Compare Performance (A vs B), Benchmarking Packaging/Routes.
+   - Columns: transport_mode, package_type, route, damage_rate, avg_fatigue_score, safety_score
+
+Scenario Guidelines (Whitepaper Analytics):
+- **Fatigue/Stress**: Query `cumulative_shock_index` from `mart_logistics_master`.
+- **Benchmarking/Comparison**: Query `mart_quality_matrix`.
+- **Geospatial Risk**: Query `mart_risk_heatmap`.
+- **Composite Conditions (e.g. Temp < 0 & Shock > 5)**: Query `mart_sensor_detail`.
 
 Question: {question}
 SQL Query:

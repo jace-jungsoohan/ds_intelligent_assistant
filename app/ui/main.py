@@ -12,33 +12,52 @@ from app.agents.orchestrator import Orchestrator
 # --- Page Config & Styling ---
 st.set_page_config(page_title="Willog AI Assistant", page_icon="🤖", layout="wide")
 
-# Custom CSS for the pill-shaped search bar and premium look
+# --- Custom CSS for Styling ---
 st.markdown("""
     <style>
     .main {
         background-color: #ffffff;
     }
+    /* Input Box Styling */
     .stTextInput > div > div > input {
-        border-radius: 25px;
-        padding: 10px 25px;
-        border: 1px solid #e0e0e0;
+        border-radius: 30px;
+        padding: 15px 25px;
+        border: 1px solid #dfe1e5;
         font-size: 16px;
+        box-shadow: 0 1px 6px 0 rgba(32, 33, 36, 0.28);
     }
+    .stTextInput > div > div > input:focus {
+        border-color: #4285f4;
+        box-shadow: 0 1px 6px 0 rgba(32, 33, 36, 0.28);
+    }
+    /* Suggestion Buttons as Text Pill style */
     .stButton > button {
-        border-radius: 20px;
-        border: 1px solid #f0f0f0;
-        background-color: #fcfcfc;
-        color: #555;
+        border-radius: 18px;
+        border: 1px solid #dadce0;
+        background-color: #f8f9fa;
+        color: #3c4043;
+        font-size: 14px;
+        padding: 8px 16px;
+        margin: 4px;
+        height: auto;
+        white-space: normal; /* Allow text wrap */
+        line-height: 1.4;
+        text-align: left; /* Text alignment */
     }
-    .centered-text {
+    .stButton > button:hover {
+        background-color: #f1f3f4;
+        border-color: #dadce0;
+        color: #202124;
+    }
+    /* Hide the default "Press Enter to apply" text */
+    .stDeployButton {display:none;}
+    
+    .title-text {
         text-align: center;
+        font-size: 24px;
+        color: #202124;
         margin-bottom: 30px;
-        color: #333;
-        font-weight: 600;
-    }
-    .search-container {
-        max-width: 800px;
-        margin: 0 auto;
+        font-weight: 500;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -55,7 +74,8 @@ if "query_input" not in st.session_state:
     st.session_state.query_input = ""
 
 # --- Helper Function ---
-def process_message(prompt):
+def process_message():
+    prompt = st.session_state.query_input
     if not prompt:
         return
     
@@ -83,59 +103,54 @@ def process_message(prompt):
         "content": response_text,
         "debug": debug_logs
     })
-    # Clear the input for next time
+    # Clear input
     st.session_state.query_input = ""
 
 def set_query(text):
     st.session_state.query_input = text
 
 # --- UI Header ---
-st.markdown("<h1 class='centered-text'>지금 무슨 생각을 하시나요?</h1>", unsafe_allow_html=True)
+st.markdown("<div class='title-text'>무슨 작업을 하고 계세요?</div>", unsafe_allow_html=True)
 
 # --- Top Query Area ---
 with st.container():
-    # Search Bar Section
-    col_l, col_m, col_r = st.columns([1, 4, 1])
-    with col_m:
-        # We use a form to handle submission but a separate input to handle 'value' updates from buttons
-        user_text = st.text_input(
-            "What's on your mind?",
+    col_l, col_center, col_r = st.columns([1, 6, 1])
+    with col_center:
+        # Search Input with on_change for 'Enter' key submission
+        st.text_input(
+            "Search",
             value=st.session_state.query_input,
             placeholder="무엇이든 물어보세요",
             label_visibility="collapsed",
-            key="input_box"
+            key="query_input",
+            on_change=process_message
         )
-        
-        c1, c2, c3 = st.columns([4, 1, 1])
-        if c1.button("질문하기", type="primary", use_container_width=True):
-            process_message(user_text)
-            st.rerun()
-            
-    # --- Suggested Questions Section ---
-    st.markdown("<p style='text-align: center; color: #888; margin-top: 20px;'>💡 추천 질문 (입력창에 자동 입력됩니다)</p>", unsafe_allow_html=True)
-    
-    # Arrange 5 buttons in 2 rows or a wrap
-    s_col1, s_col2, s_col3, s_col4, s_col5 = st.columns(5)
-    
-    if s_col1.button("📉 상하이 물량", use_container_width=True):
-        set_query("상하이(CNSHG)행 총 운송 물량 알려줘")
-        st.rerun()
-        
-    if s_col2.button("🌡️ 오사카 온도", use_container_width=True):
-        set_query("최근 오사카(JPOSA)행 운송 건들의 온도 관리 현황을 요약해줘")
-        st.rerun()
-        
-    if s_col3.button("💥 구간별 충격", use_container_width=True):
-        set_query("운송 구간별로 충격이 많이 발생하는 목적지 상위 3곳 알려줘")
-        st.rerun()
-        
-    if s_col4.button("📍 이슈 지역", use_container_width=True):
-        set_query("최근 1주일간 물류 이슈가 가장 빈번했던 목적지는 어디야?")
-        st.rerun()
-        
-    if s_col5.button("📊 충격 비율", use_container_width=True):
-        set_query("전체 운송 건 중 충격 알람이 발생한 비율을 분석해줘")
-        st.rerun()
+
+        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+
+        # --- Suggested Questions (10 items) ---
+        # Define questions list
+        suggestions = [
+            "상하이(CNSHG)행 총 운송 물량 알려줘",
+            "오사카(JPOSA)행 운송 건들의 온도 관리 현황 요약해줘",
+            "구간별 충격 상위 3곳 분석해줘 (히트맵)",
+            "누적 충격 피로도가 높은 운송 건 Top 5 알려줘",
+            "최근 1주일간 발생한 위험 등급(High Risk) 건 보여줘",
+            "해상 운송 시 파손율이 높은 포장 타입은?",
+            "베트남행 화물 중 습도 이탈이 잦은 구간은?",
+            "영하 온도에서 5G 이상 충격 발생 건수는?",
+            "운송사별 평균 이탈률과 안전 점수 비교해줘",
+            "포장 타입 A와 B의 충격 흡수 성능 비교해줘"
+        ]
+
+        # Grid Layout for Suggestions (2 columns x 5 rows)
+        s_cols = st.columns(2)
+        for i, question in enumerate(suggestions):
+            col_idx = i % 2
+            # Use 'full text' inside the button
+            if s_cols[col_idx].button(question, key=f"suger_{i}", use_container_width=True):
+                set_query(question)
+                st.rerun()
 
 st.markdown("<br><hr>", unsafe_allow_html=True)
 

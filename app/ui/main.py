@@ -73,8 +73,13 @@ if "messages" not in st.session_state:
 if "query_input" not in st.session_state:
     st.session_state.query_input = ""
 
-# --- Helper Function ---
+# --- Helper Functions ---
 def process_message():
+    """Callback for text input on_change or search button click"""
+    # 1. Get input from widget key if triggered by text input
+    if "widget_input" in st.session_state:
+        st.session_state.query_input = st.session_state.widget_input
+    
     prompt = st.session_state.query_input
     if not prompt:
         return
@@ -105,31 +110,48 @@ def process_message():
     })
     # Clear input
     st.session_state.query_input = ""
+    st.session_state.widget_input = ""  # Clear widget as well
 
-def set_query(text):
+def set_query_callback(text):
+    """Callback for suggested question buttons"""
     st.session_state.query_input = text
+    # Note: We don't auto-execute (process_message) here as requested, just fill the text.
+    # To reflect this change in the widget, we update the widget key if it exists, or let value= take over.
+    # However, st.text_input with key takes precedence. So we update the session state variable bound to the key?
+    # No, 'value' arg works if key is not in state yet OR we update the key directly.
+    st.session_state.widget_input = text
 
 # --- UI Header ---
 st.markdown("<div class='title-text'>무슨 작업을 하고 계세요?</div>", unsafe_allow_html=True)
 
 # --- Top Query Area ---
 with st.container():
-    col_l, col_center, col_r = st.columns([1, 6, 1])
+    col_l, col_center, col_btn, col_r = st.columns([1, 6, 1, 1])
     with col_center:
-        # Search Input with on_change for 'Enter' key submission
+        # Search Input
+        # Use on_change for Enter key submission
+        # Bind value to session state via 'key' is tricky when we want to update it programmatically.
+        # Best way: Use a separate key ('widget_input') and default value from state.
         st.text_input(
             "Search",
-            value=st.session_state.query_input,
+            value=st.session_state.get("widget_input", st.session_state.query_input),
             placeholder="무엇이든 물어보세요",
             label_visibility="collapsed",
-            key="query_input",
+            key="widget_input", 
             on_change=process_message
         )
 
+    with col_btn:
+        # Search Button (Restored)
+        # Use a callback to trigger processing
+        # Need vertical alignment padding
+        st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
+        st.button("🔍", on_click=process_message, use_container_width=True)
+
+    with col_center:
         st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
         # --- Suggested Questions (10 items) ---
-        # Define questions list
         suggestions = [
             "상하이(CNSHG)행 총 운송 물량 알려줘",
             "오사카(JPOSA)행 운송 건들의 온도 관리 현황 요약해줘",
@@ -143,14 +165,18 @@ with st.container():
             "포장 타입 A와 B의 충격 흡수 성능 비교해줘"
         ]
 
-        # Grid Layout for Suggestions (2 columns x 5 rows)
+        # Grid Layout
         s_cols = st.columns(2)
         for i, question in enumerate(suggestions):
             col_idx = i % 2
-            # Use 'full text' inside the button
-            if s_cols[col_idx].button(question, key=f"suger_{i}", use_container_width=True):
-                set_query(question)
-                st.rerun()
+            # Use on_click callback to avoid StreamlitAPIException
+            s_cols[col_idx].button(
+                question, 
+                key=f"suger_{i}", 
+                use_container_width=True,
+                on_click=set_query_callback,
+                args=(question,)
+            )
 
 st.markdown("<br><hr>", unsafe_allow_html=True)
 

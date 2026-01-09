@@ -24,48 +24,71 @@ st.markdown("""
         padding: 12px 20px;
         border: 1px solid #dfe1e5;
         font-size: 16px;
-        box-shadow: 0 1px 6px 0 rgba(32, 33, 36, 0.28);
+        box-shadow: none; /* Removed default shadow for cleaner look */
+        height: 50px; /* Fixed height for alignment */
+    }
+    .stTextInput > div > div > input:focus {
+        border-color: #4285f4;
+        box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
     }
     
-    /* Search Button Styling (make it look integrated) */
-    div[data-testid="column"] > div > div > div > div > button {
-        border-radius: 50%;
-        height: 48px;
-        width: 48px;
-        padding: 0;
-        border: none;
-        background-color: #f8f9fa;
-        font-size: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    /* Search Button Styling */
+    /* Target the button inside the specific column */
+    div[data-testid="column"] button {
+        border-radius: 50% !important;
+        height: 50px !important; /* Match input height */
+        width: 50px !important;
+        padding: 0 !important;
+        border: 1px solid #dfe1e5 !important;
+        background-color: #ffffff !important;
+        font-size: 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: none !important;
+        margin-top: 28px !important; /* Precise margin to align with input label offset */
     }
     
-    /* Suggestion Buttons: Smaller & Tighter */
+    div[data-testid="column"] button:hover {
+        background-color: #f8f9fa !important;
+        border-color: #dfe1e5 !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Hide input label gap to help alignment */
+    .stTextInput > label {
+        display: none;
+    }
+
+    /* Suggestion Buttons */
     .suggestion-btn > div > div > div > button {
-        border-radius: 15px;
+        border-radius: 20px;
         border: 1px solid #e8eaed;
         background-color: #f8f9fa;
-        color: #5f6368;
-        font-size: 12px; /* Smaller font */
-        padding: 4px 12px; /* Tighter padding */
-        margin: 2px; /* Tighter gap */
+        color: #3c4043;
+        font-size: 13px;
+        padding: 6px 16px;
+        margin: 4px 6px 4px 0px;
         height: auto;
-        min-height: 2.5rem;
+        min-height: 2.2rem;
         white-space: normal;
-        line-height: 1.3;
+        line-height: 1.4;
         text-align: left;
-    }
-    .suggestion-btn > div > div > div > button:hover {
-        background-color: #e8f0fe;
-        color: #1967d2;
-        border-color: #d2e3fc;
     }
     
     .title-text {
         text-align: center;
-        font-size: 22px;
+        font-size: 28px;
         color: #202124;
-        margin-bottom: 20px;
-        font-weight: 500;
+        margin-bottom: 5px; /* Reduced bottom margin */
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+    .subtitle-text {
+        text-align: center;
+        color: #5f6368;
+        font-size: 15px;
+        margin-bottom: 30px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -119,27 +142,27 @@ def set_query_callback(text):
     st.session_state.widget_input = text
 
 # --- UI Header ---
-st.markdown("<div class='title-text'>무슨 작업을 하고 계세요?</div>", unsafe_allow_html=True)
+st.markdown("<div class='title-text'>Willog 무엇이든 물어보세요</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle-text'>물류 데이터 분석부터 리스크 예측까지 AI가 도와드릴게요</div>", unsafe_allow_html=True)
 
 # --- Top Query Area ---
 with st.container():
-    # Use columns to align text input and button tightly
-    c_spacer_l, c_input, c_btn, c_spacer_r = st.columns([1, 8, 1, 1])
+    # Adjusted columns for better centering and button proximity
+    c_l, c_input, c_btn, c_r = st.columns([1, 6, 0.5, 1])
     
     with c_input:
         st.text_input(
             "Search",
             value=st.session_state.get("widget_input", st.session_state.query_input),
-            placeholder="물류 데이터를 검색해보세요...",
+            placeholder="궁금한 내용을 입력해주세요...",
             label_visibility="collapsed",
             key="widget_input", 
             on_change=process_message
         )
     with c_btn:
-        # Align button with input box manually via margin if needed, or rely on auto alignment
-        # Adding a bit of top margin/padding to align with text input height
-        st.markdown("""<style>div.stButton > button:first-child { margin-top: 0px; }</style>""", unsafe_allow_html=True) 
         st.button("🔍", on_click=process_message, use_container_width=True)
+
+    # --- Suggested Questions (Refined & Tighter) ---
 
     # --- Suggested Questions (Refined & Tighter) ---
     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)

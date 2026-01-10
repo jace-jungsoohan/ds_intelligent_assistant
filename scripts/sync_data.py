@@ -25,6 +25,15 @@ def sync_whitepaper_mart():
         print(f"Error: Dataset {dataset_id} not found.")
         return
 
+    # Drop existing tables to avoid clustering spec conflicts
+    tables_to_drop = ["mart_sensor_detail"]  # Tables with changed clustering
+    for table_name in tables_to_drop:
+        try:
+            client.delete_table(f"{dataset_id}.{table_name}", not_found_ok=True)
+            print(f"🗑️ Dropped existing table: {table_name}")
+        except Exception as e:
+            print(f"Warning: Could not drop {table_name}: {e}")
+
     # 1. Mart Logistics Master
     q_master = f"""
     CREATE OR REPLACE TABLE `{dataset_id}.mart_logistics_master`

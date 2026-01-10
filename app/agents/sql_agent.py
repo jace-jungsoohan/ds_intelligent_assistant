@@ -84,11 +84,14 @@ Example SQLs (Few-shot Learning):
 Example SQLs (Few-shot Learning):
 1. "🛳️ 해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)
 SELECT
-    'Ocean' as transport_mode,
-    COUNTIF(shock_g >= 5) as high_shock_count,
-    COUNT(*) as total_count,
-    SAFE_DIVIDE(COUNTIF(shock_g >= 5), COUNT(*)) as high_shock_ratio
-FROM `willog-prod-data-gold.rag.mart_sensor_detail`
+    t2.transport_mode,
+    COUNTIF(t1.shock_g >= 5) as high_shock_count,
+    COUNT(*) as total_sensor_readings,
+    SAFE_DIVIDE(COUNTIF(t1.shock_g >= 5), COUNT(*)) as high_shock_ratio
+FROM `willog-prod-data-gold.rag.mart_sensor_detail` t1
+JOIN `willog-prod-data-gold.rag.mart_logistics_master` t2 ON t1.code = t2.code
+WHERE t2.transport_mode = 'Ocean' -- Optional: Remove WHERE to see all modes
+GROUP BY 1
 
 2. "베트남행 화물 중 습도 이탈 구간" (Route/Location Analysis)
 SELECT lat, lon, COUNT(*) as excursion_count

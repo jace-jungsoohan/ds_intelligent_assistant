@@ -14,7 +14,7 @@ from app.core.config import settings
 # Initialize Vertex AI Model
 try:
     llm = ChatVertexAI(
-        model_name="gemini-2.5-flash",
+        model_name="gemini-3.0-flash",
         project=settings.PROJECT_ID,
         location=settings.LOCATION,
         temperature=0

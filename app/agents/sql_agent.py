@@ -70,11 +70,15 @@ Scenario Guidelines (Whitepaper Analytics):
 - **Location filtering for Sensor Data**: You MUST JOIN `mart_sensor_detail` (t1) with `mart_logistics_master` (t2) on `t1.code = t2.code` to filter by `destination` (e.g., 'China', 'Vietnam'). `mart_sensor_detail` only has lat/lon, NOT destination name.
 
 Code Mapping Guide (Interpret location names as follows):
-- Shanghai, Sanghai, 상해, 상하이 -> 'CNSHG'
-- Osaka, 오사카 -> 'JPOSA'
-- Rizhao, 일조, 리자오 -> 'CNRZH'
-- Lianyungang, 연운항 -> 'CNLYG'
-- Ningbo, 닝보 -> 'CNNBG'
+- Shanghai, Sanghai, 상해, 상하이, SH -> 'CNSHG'
+- Osaka, Osaca, 오사카, 오사카항 -> 'JPOSA'
+- Rizhao, Rizo, 일조, 리자오 -> 'CNRZH'
+- Lianyungang, Lianyun, 연운항 -> 'CNLYG'
+- Ningbo, Ningpo, 닝보 -> 'CNNBG'
+- Hochiminh, HCMC, 호치민 -> 'VNSGN' (or like '%VN%')
+- Haiphong, 하이퐁 -> 'VNHPH'
+- Incheon, ICN, 인천 -> 'KRICN'
+- Busan, Pusan, 부산 -> 'KRPUS'
 
 Example SQLs (Few-shot Learning):
 1. "해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)

@@ -99,7 +99,30 @@ def get_orchestrator():
     return Orchestrator()
 
 if "orchestrator" not in st.session_state:
-    st.session_state.orchestrator = get_orchestrator()
+    # Initial Loading UI with Progress Bar
+    loading_placeholder = st.empty()
+    with loading_placeholder.container():
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.info("🤖 AI 시스템을 초기화하고 있습니다. 잠시만 기다려주세요...")
+        progress_bar = st.progress(0)
+        
+        # Simulate initial progress
+        import time
+        for i in range(30):
+            time.sleep(0.01)
+            progress_bar.progress(i + 1)
+            
+        # Actual Initialization (Cached)
+        st.session_state.orchestrator = get_orchestrator()
+        
+        # Complete progress
+        for i in range(30, 100):
+            time.sleep(0.005)
+            progress_bar.progress(i + 1)
+            
+        time.sleep(0.5)
+    
+    loading_placeholder.empty()
 
 # --- State Management ---
 if "messages" not in st.session_state:

@@ -66,8 +66,9 @@ Available tables (always use fully qualified names with backticks):
 Scenario Guidelines (Whitepaper Analytics):
 - **Fatigue/Stress**: Query `cumulative_shock_index` from `mart_logistics_master`.
 - **Benchmarking/Comparison**: Query `mart_quality_matrix`.
-- **Geospatial Risk**: Query `mart_risk_heatmap`.
 - **Composite Conditions (e.g. Temp < 0 & Shock > 5)**: Query `mart_sensor_detail`.
+- **Location filtering for Sensor Data**: You MUST JOIN `mart_sensor_detail` (t1) with `mart_logistics_master` (t2) on `t1.code = t2.code` to filter by `destination` (e.g., 'China', 'Vietnam'). `mart_sensor_detail` only has lat/lon, NOT destination name.
+
 Code Mapping Guide (Interpret location names as follows):
 - Shanghai, Sanghai, 상해, 상하이 -> 'CNSHG'
 - Osaka, 오사카 -> 'JPOSA'
@@ -78,25 +79,32 @@ Code Mapping Guide (Interpret location names as follows):
 Example SQLs (Few-shot Learning):
 1. "해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)
 SELECT
-    -- Infer transport mode from question or query master
     'Ocean' as transport_mode,
     COUNTIF(shock_g >= 5) as high_shock_count,
     COUNT(*) as total_count,
     SAFE_DIVIDE(COUNTIF(shock_g >= 5), COUNT(*)) as high_shock_ratio
 FROM `willog-prod-data-gold.rag.mart_sensor_detail`
--- Note: mart_sensor_detail doesn't have transport_mode. Join with master or use master if looking for shipment-level stats.
--- Better approach: Use master for shipment level ratio, use detail for log level ratio.
--- Let's stick to simple logic for LLM:
--- IF looking for log-level ratio (e.g. shock events / total logs):
--- FROM `willog-prod-data-gold.rag.mart_sensor_detail` ...
 
 2. "베트남행 화물 중 습도 이탈 구간" (Route/Location Analysis)
 SELECT lat, lon, COUNT(*) as excursion_count
 FROM `willog-prod-data-gold.rag.mart_sensor_detail`
-WHERE destination LIKE '%VN%' OR destination = 'VNSGN'
-  AND (humidity < 40 OR humidity > 80)
-GROUP BY 1, 2
-ORDER BY 3 DESC LIMIT 10
+WHERE destination LIKE '%VN%' OR destination = 'VNSGN' -- ERROR: Destination not in sensor_detail
+-- CORRECT APPROACH:
+-- SELECT t1.lat, t1.lon, COUNT(*) 
+-- FROM `willog-prod-data-gold.rag.mart_sensor_detail` t1
+-- JOIN `willog-prod-data-gold.rag.mart_logistics_master` t2 ON t1.code = t2.code
+-- WHERE t2.destination LIKE '%VN%' ...
+
+3. "이번 달 중국에서 영하 온도 충격 건수" (Location + Sensor Condition)
+SELECT
+    COUNT(*) as shock_count_below_zero
+FROM `willog-prod-data-gold.rag.mart_sensor_detail` t1
+JOIN `willog-prod-data-gold.rag.mart_logistics_master` t2 ON t1.code = t2.code
+WHERE
+    t2.destination LIKE '%China%' OR t2.destination IN ('CNSHG', 'CNNBG', 'CNRZH', 'CNLYG')
+    AND t1.temperature < 0
+    AND t1.shock_g > 0 -- Assuming 'shock event' means strict shock > 0 or a threshold like > 2
+    AND t1.event_date BETWEEN DATE_TRUNC(CURRENT_DATE(), MONTH) AND CURRENT_DATE()
 
 Question: {question}
 SQL Query:

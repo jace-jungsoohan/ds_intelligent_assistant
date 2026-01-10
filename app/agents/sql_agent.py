@@ -205,9 +205,15 @@ class SQLAgent:
         error = None
         try:
             if bq_client.client:
+                print(f"DEBUG: Executing query on BigQuery...")
                 result_df = bq_client.run_query(clean_sql)
+                print(f"DEBUG: Query executed. Result shape: {result_df.shape if result_df is not None else 'None'}")
+            else:
+                error = "BigQuery Client is not initialized (client object is None)."
+                print(f"DEBUG: {error}")
         except Exception as e:
             error = str(e)
+            print(f"DEBUG: Query execution failed: {error}")
 
         # 3. Synthesize natural language response
         natural_response = None
@@ -225,7 +231,14 @@ class SQLAgent:
         elif error:
             natural_response = f"쿼리 실행 중 오류가 발생했습니다: {error}"
         elif result_df is None:
-            natural_response = f"생성된 SQL:\n{clean_sql}\n\n(BigQuery 연결이 필요합니다)"
+            # Fallback for unexpected None result without explicit error
+            natural_response = (
+                f"⚠️ 데이터 조회에 실패했습니다.\n"
+                f"SQL은 생성되었으나 BigQuery 실행 결과를 받아오지 못했습니다.\n"
+                f"디버그 정보:\n"
+                f"- SQL: `{clean_sql}`\n"
+                f"- BQ Client Status: {'Active' if bq_client.client else 'Inactive'}"
+            )
 
         return {
             "question": question,

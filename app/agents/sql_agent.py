@@ -108,8 +108,19 @@ JOIN `willog-prod-data-gold.rag.mart_logistics_master` t2 ON t1.code = t2.code
 WHERE
     t2.destination LIKE '%China%' OR t2.destination IN ('CNSHG', 'CNNBG', 'CNRZH', 'CNLYG')
     AND t1.temperature < 0
-    AND t1.shock_g > 0 -- Assuming 'shock event' means strict shock > 0 or a threshold like > 2
+    AND t1.shock_g > 0 
     AND t1.event_date BETWEEN DATE_TRUNC(CURRENT_DATE(), MONTH) AND CURRENT_DATE()
+
+4. "❄️ 60분이상 지속된 영하 온도에서 발생한 충격 건수" (Duration + Complex Condition)
+-- 'Duration' queries usually refer to 'temp_excursion_duration_min' in master table.
+SELECT
+    COUNT(*) as shock_count
+FROM `willog-prod-data-gold.rag.mart_sensor_detail` t1
+JOIN `willog-prod-data-gold.rag.mart_logistics_master` t2 ON t1.code = t2.code
+WHERE
+    t1.temperature < 0
+    AND t2.temp_excursion_duration_min >= 60 -- Use pre-calculated duration from master
+    AND t1.shock_g > 0
 
 Question: {question}
 SQL Query:

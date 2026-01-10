@@ -27,11 +27,13 @@
 
 ### B. `mart_sensor_detail` (심층 원인 분석용 Raw)
 *   **목적**: "충격-온도 복합 상관관계", "방향성(Tilt) 기반 포장 유효성", "구체적인 발생 시점/원인 규명"
-*   **활용 시나리오**: "영하일 때 충격이 더 컸어?", "측면 충격(Tilt Y)이 많았어?"
+*   **활용 시나리오**: "영하일 때 충격이 더 컸어?", "측면 충격(Tilt Y)이 많았어?", "중국행 화물의 충격 건수"
 *   **Grain**: 센서 로그 단위 (수십억 건, Partitioned by Date)
 *   **Key Columns**:
     *   `event_date`, `event_timestamp`
     *   `code` (Join Key)
+    *   `destination` (Port Code), `destination_country` (국가명: 'China', 'Japan', 'Vietnam' 등) ✨ NEW
+    *   `transport_mode` ('Ocean', 'Air', 'Truck') ✨ NEW - JOIN 없이 직접 필터링 가능
     *   `shock_g` (합성 가속도)
     *   **방향성 데이터**: `acc_x`, `acc_y`, `acc_z` (3축 가속도), `tilt_x`, `tilt_y` (기울기)
     *   `temperature`, `humidity`

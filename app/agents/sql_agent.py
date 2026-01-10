@@ -44,8 +44,10 @@ Available tables (always use fully qualified names with backticks):
    - Purpose: Master transport stats, volume, damage rates, RISK LEVELS, FATIGUE.
    - Columns: 
      - code (STRING): Shipment ID
-     - departure_date (DATE): Partition Key
-     - destination (STRING), product (STRING), transport_mode (STRING)
+     - departure_date (DATE): Partition Key - use for time filtering (e.g., "이번 달", "최근 1주일")
+     - destination (STRING): Port code (e.g., 'CNSHG')
+     - product (STRING), transport_mode (STRING): 'Ocean', 'Air', 'Truck'
+     - package_type (STRING): Packaging type
      - cumulative_shock_index (FLOAT): "Fatigue" or "Cumulative Stress" score
      - risk_level (STRING): 'Low', 'Medium', 'High', 'Critical'
      - temp_excursion_duration_min (INT64): Minutes outside valid temp range
@@ -53,7 +55,16 @@ Available tables (always use fully qualified names with backticks):
 
 2. `willog-prod-data-gold.rag.mart_sensor_detail` (Big Data / Granular)
    - Purpose: Dynamic Threshold Queries (e.g. "Shock > 7G"), Multi-variable Correlation, Directional Analysis.
-   - Columns: event_date, shock_g, temperature, humidity, acc_x, acc_y, acc_z, tilt_x, tilt_y, lat, lon
+   - Columns: 
+     - event_date (DATE): Partition Key - use for time filtering
+     - code (STRING): Shipment ID (Join Key)
+     - destination (STRING): Port code
+     - destination_country (STRING): 'China', 'Japan', 'Vietnam', 'Korea', 'USA', 'Other'
+     - transport_mode (STRING): 'Ocean', 'Air', 'Truck' - DIRECTLY AVAILABLE, no JOIN needed
+     - shock_g (FLOAT), temperature (FLOAT), humidity (FLOAT)
+     - acc_x, acc_y, acc_z (FLOAT): Directional acceleration
+     - tilt_x, tilt_y (FLOAT): Tilt angles
+     - lat, lon (FLOAT): Geolocation
 
 3. `willog-prod-data-gold.rag.mart_risk_heatmap` (Geospatial)
    - Purpose: "Heatmap", "Risk Map", "Where do shocks occur?".
@@ -67,7 +78,11 @@ Scenario Guidelines (Whitepaper Analytics):
 - **Fatigue/Stress**: Query `cumulative_shock_index` from `mart_logistics_master`.
 - **Benchmarking/Comparison**: Query `mart_quality_matrix`.
 - **Composite Conditions (e.g. Temp < 0 & Shock > 5)**: Query `mart_sensor_detail`.
-- **Location filtering for Sensor Data**: You MUST JOIN `mart_sensor_detail` (t1) with `mart_logistics_master` (t2) on `t1.code = t2.code` to filter by `destination` (e.g., 'China', 'Vietnam'). `mart_sensor_detail` only has lat/lon, NOT destination name.
+- **Country filtering**: Use `destination_country` in `mart_sensor_detail` (e.g., WHERE destination_country = 'China').
+- **Time filtering**: Use `departure_date` or `event_date` with DATE functions:
+  - "이번 달": `WHERE event_date >= DATE_TRUNC(CURRENT_DATE(), MONTH)`
+  - "최근 1주일": `WHERE event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)`
+  - "지난달": `WHERE event_date BETWEEN DATE_TRUNC(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH), MONTH) AND LAST_DAY(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH))`
 
 Code Mapping Guide (Interpret location names as follows):
 - Shanghai, Sanghai, 상해, 상하이, SH -> 'CNSHG'
@@ -79,6 +94,9 @@ Code Mapping Guide (Interpret location names as follows):
 - Haiphong, 하이퐁 -> 'VNHPH'
 - Incheon, ICN, 인천 -> 'KRICN'
 - Busan, Pusan, 부산 -> 'KRPUS'
+- China, 중국 -> destination_country = 'China' OR destination LIKE 'CN%'
+- Vietnam, 베트남 -> destination_country = 'Vietnam' OR destination LIKE 'VN%'
+- Japan, 일본 -> destination_country = 'Japan' OR destination LIKE 'JP%'
 
 Example SQLs (Few-shot Learning):
 Example SQLs (Few-shot Learning):

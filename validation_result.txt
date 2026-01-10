@@ -109,3 +109,78 @@ DEBUG: Query executed. Result shape: (0, 4)
   ⚠️ Empty Result (0 rows) - Data might effectively not exist
 ------------------------------
 [7/10] Testing: 📍 베트남 경로 습도 취약 구간 분석
+DEBUG: Generated SQL for '📍 베트남 경로 습도 취약 구간 분석': [```sql
+SELECT
+    t1.lat,
+    t1.lon,
+    COUNT(t1.humidity) AS humidity_readings_count,
+    AVG(t1.humidity) AS average_humidity
+FROM
+    `willog-prod-data-gold.rag.mart_sensor_detail` AS t1
+JOIN
+    `willog-prod-data-gold.rag.mart_logistics_master` AS t2
+ON
+    t1.code = t2.code
+WHERE
+    t2.destination LIKE 'VN%' OR t2.destination IN ('VNSGN', 'VNHPH')
+GROUP BY
+    t1.lat,
+    t1.lon
+ORDER BY
+    humidity_readings_count DESC
+```]
+DEBUG: Executing query on BigQuery...
+DEBUG: Query executed. Result shape: (0, 4)
+  ⚠️ Empty Result (0 rows) - Data might effectively not exist
+------------------------------
+[8/10] Testing: ❄️ 영하 온도에서 발생한 충격 건수
+DEBUG: Generated SQL for '❄️ 영하 온도에서 발생한 충격 건수': [```sql
+SELECT
+    COUNT(*) as shock_count_below_zero
+FROM `willog-prod-data-gold.rag.mart_sensor_detail`
+WHERE
+    temperature < 0
+    AND shock_g > 0
+```]
+DEBUG: Executing query on BigQuery...
+DEBUG: Query executed. Result shape: (1, 1)
+  ✅ Success (1 rows)
+------------------------------
+[9/10] Testing: 🏆 운송사별 배송 품질 벤치마킹
+DEBUG: Generated SQL for '🏆 운송사별 배송 품질 벤치마킹': [```sql
+SELECT
+    transport_mode,
+    AVG(damage_rate) AS average_damage_rate,
+    AVG(avg_fatigue_score) AS average_fatigue_score,
+    AVG(safety_score) AS average_safety_score
+FROM `willog-prod-data-gold.rag.mart_quality_matrix`
+GROUP BY transport_mode
+ORDER BY transport_mode
+```]
+DEBUG: Executing query on BigQuery...
+DEBUG: Query executed. Result shape: (7, 4)
+  ✅ Success (7 rows)
+------------------------------
+[10/10] Testing: 🚨 최근 1주일 High Risk 등급 운송 건
+DEBUG: Generated SQL for '🚨 최근 1주일 High Risk 등급 운송 건': [```sql
+SELECT
+    COUNT(DISTINCT code) AS high_risk_shipment_count
+FROM
+    `willog-prod-data-gold.rag.mart_logistics_master`
+WHERE
+    risk_level = 'High'
+    AND departure_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+```]
+DEBUG: Executing query on BigQuery...
+DEBUG: Query executed. Result shape: (1, 1)
+  ✅ Success (1 rows)
+------------------------------
+
+📋 Summary:
+Total: 10
+Passed: 8
+Failed: 2
+
+❌ Failed Questions:
+- 🛳️ 해상 운송 중 5G 이상 충격 발생 비율
+- 📍 베트남 경로 습도 취약 구간 분석

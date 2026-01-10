@@ -74,39 +74,51 @@ def sync_whitepaper_mart():
     WHERE t.departure_time IS NOT NULL;
     """
     
-    # 2. Mart Sensor Detail
+    # 2. Mart Sensor Detail (Enhanced with transport_mode for easier queries)
     q_detail = f"""
     CREATE OR REPLACE TABLE `{dataset_id}.mart_sensor_detail`
     PARTITION BY event_date
-    CLUSTER BY destination, code
+    CLUSTER BY destination, transport_mode, code
     AS
     SELECT
-        DATE(device_datetime) as event_date,
-        device_datetime as event_timestamp,
-        code,
-        pod as destination,
+        DATE(m.device_datetime) as event_date,
+        m.device_datetime as event_timestamp,
+        m.code,
+        m.pod as destination,
+        -- Added: Country code extraction for easier filtering
+        CASE 
+            WHEN m.pod LIKE 'CN%' THEN 'China'
+            WHEN m.pod LIKE 'JP%' THEN 'Japan'
+            WHEN m.pod LIKE 'VN%' THEN 'Vietnam'
+            WHEN m.pod LIKE 'KR%' THEN 'Korea'
+            WHEN m.pod LIKE 'US%' THEN 'USA'
+            ELSE 'Other'
+        END as destination_country,
+        -- Added: Transport mode from master for direct queries
+        t.shipmode as transport_mode,
         
-        temperature,
-        humidity,
-        shock_high as shock_g,
+        m.temperature,
+        m.humidity,
+        m.shock_high as shock_g,
         
-        acc as acc_resultant,
-        accx as acc_x,
-        accy as acc_y,
-        accz as acc_z,
-        tiltx as tilt_x,
-        tilty as tilt_y,
+        m.acc as acc_resultant,
+        m.accx as acc_x,
+        m.accy as acc_y,
+        m.accz as acc_z,
+        m.tiltx as tilt_x,
+        m.tilty as tilt_y,
         
-        lat,
-        lon,
+        m.lat,
+        m.lon,
         
         CASE 
-            WHEN acc < 0.2 THEN 'Static'
+            WHEN m.acc < 0.2 THEN 'Static'
             ELSE 'Moving'
         END as status
         
-    FROM `{dataset_id}.corning_merged`
-    WHERE device_datetime IS NOT NULL;
+    FROM `{dataset_id}.corning_merged` m
+    LEFT JOIN `{dataset_id}.corning_transport` t ON m.code = t.code
+    WHERE m.device_datetime IS NOT NULL;
     """
     
     # 3. Mart Risk Heatmap

@@ -152,15 +152,36 @@ def sync_whitepaper_mart():
     GROUP BY 1, 2, 3;
     """
 
+    # Define tasks as a list of dictionaries for better extensibility
     tasks = [
-        ("mart_logistics_master", q_master),
-        ("mart_sensor_detail", q_detail),
-        ("mart_risk_heatmap", q_heatmap),
-        ("mart_quality_matrix", q_matrix)
+        {
+            "table_name": "mart_logistics_master",
+            "query": q_master,
+            "description": "Master Shipment Facts"
+        },
+        {
+            "table_name": "mart_sensor_detail", 
+            "query": q_detail,
+            "description": "Granular Sensor Logs"
+        },
+        {
+            "table_name": "mart_risk_heatmap",
+            "query": q_heatmap,
+            "description": "Geospatial Aggregations"
+        },
+        {
+            "table_name": "mart_quality_matrix",
+            "query": q_matrix,
+            "description": "Performance Benchmarking"
+        }
     ]
 
-    for name, query in tasks:
-        print(f"🏗️ Building {name}...")
+    for task in tasks:
+        name = task["table_name"]
+        query = task["query"]
+        desc = task["description"]
+        
+        print(f"🏗️ Building {name} ({desc})...")
         try:
             client.query(query).result()
             print(f"✅ {name} built successfully.")

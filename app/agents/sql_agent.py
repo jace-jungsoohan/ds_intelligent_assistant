@@ -81,7 +81,8 @@ Code Mapping Guide (Interpret location names as follows):
 - Busan, Pusan, 부산 -> 'KRPUS'
 
 Example SQLs (Few-shot Learning):
-1. "해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)
+Example SQLs (Few-shot Learning):
+1. "🛳️ 해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)
 SELECT
     'Ocean' as transport_mode,
     COUNTIF(shock_g >= 5) as high_shock_count,
@@ -172,7 +173,18 @@ class SQLAgent:
             "current_date": current_date
         })
         
+        print(f"DEBUG: Generated SQL for '{question}': [{generated_sql}]") # Debug log
+        
         clean_sql = generated_sql.replace("```sql", "").replace("```", "").strip()
+        
+        if not clean_sql:
+            return {
+                "question": question,
+                "generated_sql": "",
+                "result": None,
+                "natural_response": "SQL 생성 실패: 질문을 이해하지 못했습니다.",
+                "error": "Empty SQL generated"
+            }
         
         # 2. Execute SQL against BigQuery
         result_df = None

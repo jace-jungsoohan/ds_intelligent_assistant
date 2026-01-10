@@ -46,10 +46,16 @@ Agent:
 prompt_router = ChatPromptTemplate.from_template(template_router)
 
 # Fallback for classification if LLM is unavailable
+# Fallback for classification if LLM is unavailable
 def mock_router(question: str):
-    keywords_sql = ["count", "amount", "volume", "rate", "temperature", "humidity", "shock", "stats", "data", "how many", "percentage", "average"]
+    keywords_general = ["hi", "hello", "help", "who are you", "what can you do", "안녕", "반가워", "도와줘", "누구", "기능", "소개"]
+    if any(k in question.lower() for k in keywords_general):
+        return "GENERAL_AGENT"
+
+    keywords_sql = ["count", "amount", "volume", "rate", "temperature", "humidity", "shock", "stats", "data", "how many", "percentage", "average", "통계", "수량", "건수", "파손율", "온도", "습도", "충격"]
     if any(k in question.lower() for k in keywords_sql):
         return "SQL_AGENT"
+        
     return "RETRIEVAL_AGENT"
 
 if llm:
@@ -62,13 +68,19 @@ else:
     router_chain = MockRouterChain()
 
 def route_query(question: str) -> str:
-    """Classifies the query and returns 'SQL_AGENT' or 'RETRIEVAL_AGENT'."""
+    """Classifies the query and returns 'SQL_AGENT', 'RETRIEVAL_AGENT', or 'GENERAL_AGENT'."""
     try:
         decision = router_chain.invoke({"question": question}).strip()
         # Clean up potential markdown formatting
         decision = decision.replace("`", "").replace("csv", "").strip()
-        if decision not in ["SQL_AGENT", "RETRIEVAL_AGENT"]:
-             return "SQL_AGENT" # Default
+        
+        valid_agents = ["SQL_AGENT", "RETRIEVAL_AGENT", "GENERAL_AGENT"]
+        if decision not in valid_agents:
+             # If LLM hallucinates, try fallback keyword matching
+             print(f"Router Warning: Invalid agent '{decision}', falling back to keyword search.")
+             return mock_router(question)
+             
+        return decision
         return decision
     except Exception as e:
         print(f"Router Error: {e}")

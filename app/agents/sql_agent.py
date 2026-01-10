@@ -46,7 +46,8 @@ Available tables (always use fully qualified names with backticks):
      - code (STRING): Shipment ID
      - departure_date (DATE): Partition Key - use for time filtering (e.g., "이번 달", "최근 1주일")
      - destination (STRING): Port code (e.g., 'CNSHG')
-     - product (STRING), transport_mode (STRING): 'Ocean', 'Air', 'Truck'
+     - product (STRING)
+     - transport_mode (STRING): 'Air', 'Truck', 'Ocean+Ferry', 'Ocean+Rail' (Note: 'Ocean' usually appears as composites)
      - package_type (STRING): Packaging type
      - cumulative_shock_index (FLOAT): "Fatigue" or "Cumulative Stress" score
      - risk_level (STRING): 'Low', 'Medium', 'High', 'Critical'
@@ -60,7 +61,7 @@ Available tables (always use fully qualified names with backticks):
      - code (STRING): Shipment ID (Join Key)
      - destination (STRING): Port code
      - destination_country (STRING): 'China', 'Japan', 'Vietnam', 'Korea', 'USA', 'Other'
-     - transport_mode (STRING): 'Ocean', 'Air', 'Truck' - DIRECTLY AVAILABLE, no JOIN needed
+     - transport_mode (STRING): 'Air', 'Truck', 'Ocean+Ferry', 'Ocean+Rail' - DIRECTLY AVAILABLE, no JOIN needed
      - shock_g (FLOAT), temperature (FLOAT), humidity (FLOAT)
      - acc_x, acc_y, acc_z (FLOAT): Directional acceleration
      - tilt_x, tilt_y (FLOAT): Tilt angles

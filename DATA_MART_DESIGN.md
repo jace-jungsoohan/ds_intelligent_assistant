@@ -33,7 +33,7 @@
     *   `event_date`, `event_timestamp`
     *   `code` (Join Key)
     *   `destination` (Port Code), `destination_country` (국가명: 'China', 'Japan', 'Vietnam' 등) ✨ NEW
-    *   `transport_mode` ('Ocean', 'Air', 'Truck') ✨ NEW - JOIN 없이 직접 필터링 가능
+    *   `transport_mode` ('Air', 'Truck', 'Ocean+Ferry', 'Ocean+Rail') ✨ NEW - Note: Ocean is composite
     *   `shock_g` (합성 가속도)
     *   **방향성 데이터**: `acc_x`, `acc_y`, `acc_z` (3축 가속도), `tilt_x`, `tilt_y` (기울기)
     *   `temperature`, `humidity`

@@ -68,6 +68,35 @@ Scenario Guidelines (Whitepaper Analytics):
 - **Benchmarking/Comparison**: Query `mart_quality_matrix`.
 - **Geospatial Risk**: Query `mart_risk_heatmap`.
 - **Composite Conditions (e.g. Temp < 0 & Shock > 5)**: Query `mart_sensor_detail`.
+Code Mapping Guide (Interpret location names as follows):
+- Shanghai, Sanghai, 상해, 상하이 -> 'CNSHG'
+- Osaka, 오사카 -> 'JPOSA'
+- Rizhao, 일조, 리자오 -> 'CNRZH'
+- Lianyungang, 연운항 -> 'CNLYG'
+- Ningbo, 닝보 -> 'CNNBG'
+
+Example SQLs (Few-shot Learning):
+1. "해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)
+SELECT
+    -- Infer transport mode from question or query master
+    'Ocean' as transport_mode,
+    COUNTIF(shock_g >= 5) as high_shock_count,
+    COUNT(*) as total_count,
+    SAFE_DIVIDE(COUNTIF(shock_g >= 5), COUNT(*)) as high_shock_ratio
+FROM `willog-prod-data-gold.rag.mart_sensor_detail`
+-- Note: mart_sensor_detail doesn't have transport_mode. Join with master or use master if looking for shipment-level stats.
+-- Better approach: Use master for shipment level ratio, use detail for log level ratio.
+-- Let's stick to simple logic for LLM:
+-- IF looking for log-level ratio (e.g. shock events / total logs):
+-- FROM `willog-prod-data-gold.rag.mart_sensor_detail` ...
+
+2. "베트남행 화물 중 습도 이탈 구간" (Route/Location Analysis)
+SELECT lat, lon, COUNT(*) as excursion_count
+FROM `willog-prod-data-gold.rag.mart_sensor_detail`
+WHERE destination LIKE '%VN%' OR destination = 'VNSGN'
+  AND (humidity < 40 OR humidity > 80)
+GROUP BY 1, 2
+ORDER BY 3 DESC LIMIT 10
 
 Question: {question}
 SQL Query:

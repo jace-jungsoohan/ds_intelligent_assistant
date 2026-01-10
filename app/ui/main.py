@@ -20,12 +20,12 @@ st.markdown("""
     }
     /* Input Box Styling */
     .stTextInput > div > div > input {
-        border-radius: 30px;
+        border-radius: 8px; /* Less rounded */
         padding: 12px 20px;
         border: 1px solid #dfe1e5;
         font-size: 16px;
-        box-shadow: none; /* Removed default shadow for cleaner look */
-        height: 50px; /* Fixed height for alignment */
+        box-shadow: none; 
+        height: 50px; 
     }
     .stTextInput > div > div > input:focus {
         border-color: #4285f4;
@@ -33,10 +33,9 @@ st.markdown("""
     }
     
     /* Search Button Styling */
-    /* Target the button inside the specific column */
     div[data-testid="column"] button {
-        border-radius: 50% !important;
-        height: 50px !important; /* Match input height */
+        border-radius: 8px !important; /* Less rounded */
+        height: 50px !important; 
         width: 50px !important;
         padding: 0 !important;
         border: 1px solid #dfe1e5 !important;
@@ -46,7 +45,7 @@ st.markdown("""
         align-items: center !important;
         justify-content: center !important;
         box-shadow: none !important;
-        margin-top: 28px !important; /* Precise margin to align with input label offset */
+        margin-top: 28px !important; 
     }
     
     div[data-testid="column"] button:hover {

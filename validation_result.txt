@@ -1,0 +1,111 @@
+An error occurred: module 'importlib.metadata' has no attribute 'packages_distributions'
+An error occurred: module 'importlib.metadata' has no attribute 'packages_distributions'
+An error occurred: module 'importlib.metadata' has no attribute 'packages_distributions'
+An error occurred: module 'importlib.metadata' has no attribute 'packages_distributions'
+An error occurred: module 'importlib.metadata' has no attribute 'packages_distributions'
+An error occurred: module 'importlib.metadata' has no attribute 'packages_distributions'
+An error occurred: module 'importlib.metadata' has no attribute 'packages_distributions'
+An error occurred: module 'importlib.metadata' has no attribute 'packages_distributions'
+An error occurred: module 'importlib.metadata' has no attribute 'packages_distributions'
+An error occurred: module 'importlib.metadata' has no attribute 'packages_distributions'
+An error occurred: module 'importlib.metadata' has no attribute 'packages_distributions'
+🔍 Validating Suggested Questions...
+
+[1/10] Testing: 📉 상하이(CNSHG)행 총 물량 및 파손율
+DEBUG: Generated SQL for '📉 상하이(CNSHG)행 총 물량 및 파손율': [```sql
+SELECT
+    t1.destination,
+    COUNT(t1.code) AS total_shipments,
+    COUNTIF(t1.is_damaged) AS damaged_shipments,
+    SAFE_DIVIDE(COUNTIF(t1.is_damaged), COUNT(t1.code)) AS damage_rate
+FROM
+    `willog-prod-data-gold.rag.mart_logistics_master` AS t1
+WHERE
+    t1.destination = 'CNSHG'
+GROUP BY
+    t1.destination
+```]
+DEBUG: Executing query on BigQuery...
+DEBUG: Query executed. Result shape: (1, 4)
+  ✅ Success (1 rows)
+------------------------------
+[2/10] Testing: 🔥 구간별 충격 리스크 히트맵 분석
+DEBUG: Generated SQL for '🔥 구간별 충격 리스크 히트맵 분석': [```sql
+SELECT
+    lat_center,
+    lon_center,
+    location_label,
+    risk_score,
+    high_impact_events
+FROM
+    `willog-prod-data-gold.rag.mart_risk_heatmap`
+ORDER BY
+    risk_score DESC
+```]
+DEBUG: Executing query on BigQuery...
+DEBUG: Query executed. Result shape: (964, 5)
+  ✅ Success (964 rows)
+------------------------------
+[3/10] Testing: ⚠️ 누적 충격 피로도 Top 5 운송 건
+DEBUG: Generated SQL for '⚠️ 누적 충격 피로도 Top 5 운송 건': [```sql
+SELECT
+    code,
+    cumulative_shock_index
+FROM
+    `willog-prod-data-gold.rag.mart_logistics_master`
+ORDER BY
+    cumulative_shock_index DESC
+LIMIT 5
+```]
+DEBUG: Executing query on BigQuery...
+DEBUG: Query executed. Result shape: (5, 2)
+  ✅ Success (5 rows)
+------------------------------
+[4/10] Testing: 🌡️ 오사카행 온도 이탈 평균 지속 시간
+DEBUG: Generated SQL for '🌡️ 오사카행 온도 이탈 평균 지속 시간': [```sql
+SELECT
+    AVG(temp_excursion_duration_min) AS avg_temp_excursion_duration_min
+FROM
+    `willog-prod-data-gold.rag.mart_logistics_master`
+WHERE
+    destination = 'JPOSA'
+```]
+DEBUG: Executing query on BigQuery...
+DEBUG: Query executed. Result shape: (1, 1)
+  ✅ Success (1 rows)
+------------------------------
+[5/10] Testing: 📊 포장 타입별 파손율 및 안전 점수 비교
+DEBUG: Generated SQL for '📊 포장 타입별 파손율 및 안전 점수 비교': [```sql
+SELECT
+    package_type,
+    damage_rate,
+    safety_score
+FROM
+    `willog-prod-data-gold.rag.mart_quality_matrix`
+ORDER BY
+    package_type
+```]
+DEBUG: Executing query on BigQuery...
+DEBUG: Query executed. Result shape: (48, 3)
+  ✅ Success (48 rows)
+------------------------------
+[6/10] Testing: 🛳️ 해상 운송 중 5G 이상 충격 발생 비율
+DEBUG: Generated SQL for '🛳️ 해상 운송 중 5G 이상 충격 발생 비율': [```sql
+SELECT
+    t2.transport_mode,
+    COUNTIF(t1.shock_g >= 5) as high_shock_count,
+    COUNT(*) as total_sensor_readings,
+    SAFE_DIVIDE(COUNTIF(t1.shock_g >= 5), COUNT(*)) as high_shock_ratio
+FROM `willog-prod-data-gold.rag.mart_sensor_detail` AS t1
+JOIN `willog-prod-data-gold.rag.mart_logistics_master` AS t2
+  ON t1.code = t2.code
+WHERE
+    t2.transport_mode = 'Ocean'
+GROUP BY
+    t2.transport_mode
+```]
+DEBUG: Executing query on BigQuery...
+DEBUG: Query executed. Result shape: (0, 4)
+  ⚠️ Empty Result (0 rows) - Data might effectively not exist
+------------------------------
+[7/10] Testing: 📍 베트남 경로 습도 취약 구간 분석

@@ -45,7 +45,12 @@ class Orchestrator:
 
         print("\n[Final Answer]")
         print(final_answer)
-        return final_answer
+        return {
+            "text": final_answer,
+            "data": response.get("result") if target_agent == "SQL_AGENT" and response else None,
+            "sql": response.get("generated_sql") if target_agent == "SQL_AGENT" and response else None,
+            "agent": target_agent
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

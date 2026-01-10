@@ -8,6 +8,7 @@ from io import StringIO
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from app.agents.orchestrator import Orchestrator
+from app.ui.visualization import detect_chart_type
 
 # --- Page Config & Styling ---
 st.set_page_config(page_title="Willog AI Assistant", page_icon="🤖", layout="wide")
@@ -153,9 +154,22 @@ def process_message():
     
     try:
         with st.spinner("데이터를 분석하고 있습니다..."):
-            response_text = st.session_state.orchestrator.run(prompt)
+            # Result is now a dict: {'text': ..., 'data': ..., 'sql': ...}
+            result_payload = st.session_state.orchestrator.run(prompt)
+            
+            if isinstance(result_payload, dict):
+                response_text = result_payload.get("text", "")
+                data_df = result_payload.get("data")
+                # Attempt to generate a chart
+                chart_fig = detect_chart_type(data_df)
+            else:
+                # Fallback if orchestrator returns string (legacy)
+                response_text = str(result_payload)
+                chart_fig = None
+                
     except Exception as e:
         response_text = f"오류가 발생했습니다: {str(e)}"
+        chart_fig = None
     
     sys.stdout = old_stdout
     debug_logs = mystdout.getvalue()
@@ -163,7 +177,8 @@ def process_message():
     st.session_state.messages.append({
         "role": "assistant", 
         "content": response_text,
-        "debug": debug_logs
+        "debug": debug_logs,
+        "chart": chart_fig
     })
     # Clear both state variables to reset widget
     st.session_state.query_input = ""
@@ -199,7 +214,7 @@ with st.container():
     with c_btn:
         st.button("🔍", on_click=process_message, use_container_width=True)
 
-    # --- Suggested Questions (3 Columns) ---
+    # --- Suggested Questions (3x4 Grid) ---
     st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
     
     suggestions = [
@@ -244,8 +259,13 @@ st.markdown("<hr style='margin-top: 20px; margin-bottom: 20px; border-top: 1px s
 if st.session_state.messages:
     # Display Newest FIRST
     for message in reversed(st.session_state.messages):
-        with st.chat_message(message["role"]):
+        with st.chat_message(message["role"], avatar="🧑‍💻" if message["role"] == "user" else "🤖"):
             st.markdown(message["content"])
+            
+            # Display Chart if available
+            if message.get("chart"):
+                st.plotly_chart(message["chart"], use_container_width=True)
+                
             if message.get("debug"):
                 with st.expander("🔍 상세 로그 (Query & Debug)"):
                     st.code(message["debug"])

@@ -30,12 +30,14 @@ Route the user's question to the appropriate agent.
 
 **Agents:**
 1. `SQL_AGENT`: For questions about quantifiable data, statistics, transport volumes, deviation rates, shock counts, or sensor data summaries. (e.g., "How many shipments to Vietnam?", "What was the average temperature last week?", "Show me the deviation rate.")
-2. `RETRIEVAL_AGENT`: For questions about general knowledge, policies, guidelines, document contents, or qualitative analysis found in reports. (e.g., "What is the policy for winter transport?", "Explain the shock measurement criteria.", "Why is the deviation rate calculated this way?")
+2. `RETRIEVAL_AGENT`: For questions about reports, policies, guidelines, document contents, or qualitative analysis found in reports. (e.g., "What is the policy for winter transport?", "Explain the shock measurement criteria.", "Why is the deviation rate calculated this way?")
+3. `GENERAL_AGENT`: For greetings, capabilities, general terms, or conversational inputs. (e.g., "Hello", "What can you do?", "What is Willog?", "Explain logisitcs in general")
 
 **Rules:**
 - If the question requires database aggregation or statistics, choose `SQL_AGENT`.
 - If the question requires reading reporting guidelines or text documents, choose `RETRIEVAL_AGENT`.
-- Output ONLY the agent name: `SQL_AGENT` or `RETRIEVAL_AGENT`.
+- If the question is a greeting or general inquiry about the system, choose `GENERAL_AGENT`.
+- Output ONLY the agent name: `SQL_AGENT`, `RETRIEVAL_AGENT`, or `GENERAL_AGENT`.
 
 Question: {question}
 Agent:

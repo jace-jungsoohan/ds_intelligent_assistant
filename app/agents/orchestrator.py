@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 from app.agents.router import route_query
 from app.agents.sql_agent import agent as sql_agent_instance
 from app.agents.retrieval_agent import retrieval_agent as retrieval_agent_instance
+from app.agents.general_agent import general_agent as general_agent_instance
 
 class Orchestrator:
     def run(self, question: str):
@@ -40,6 +41,10 @@ class Orchestrator:
             response = retrieval_agent_instance.process_query(question)
             final_answer = response.get("answer")
             
+        elif target_agent == "GENERAL_AGENT":
+            print("--- Invoking General Agent ---")
+            final_answer = general_agent_instance.process_query(question)
+            
         else:
             final_answer = "Unknown agent selected."
 
@@ -47,8 +52,8 @@ class Orchestrator:
         print(final_answer)
         return {
             "text": final_answer,
-            "data": response.get("result") if target_agent == "SQL_AGENT" and response else None,
-            "sql": response.get("generated_sql") if target_agent == "SQL_AGENT" and response else None,
+            "data": response.get("result") if target_agent == "SQL_AGENT" and response and isinstance(response, dict) else None,
+            "sql": response.get("generated_sql") if target_agent == "SQL_AGENT" and response and isinstance(response, dict) else None,
             "agent": target_agent
         }
 

@@ -22,7 +22,7 @@ st.markdown("""
     /* Input Box Styling */
     .stTextInput > div > div > input {
         border-radius: 8px; /* Less rounded */
-        padding: 12px 20px;
+        padding: 10px 20px;
         border: 1px solid #dfe1e5;
         font-size: 16px;
         box-shadow: none; 

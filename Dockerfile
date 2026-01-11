@@ -1,15 +1,12 @@
 # Stage 1: Build Frontend (Next.js)
-FROM node:18-alpine AS builder
-WORKDIR /app
+FROM node:18-slim AS builder
+WORKDIR /app/frontend
 
-# Copy generic package.json first to cache deps
-# We copy everything inside frontend/ to . because docker context is root
-COPY frontend/package.json frontend/package.json
-COPY frontend/package-lock.json* frontend/
+# Copy package files
+COPY frontend/package.json .
+COPY frontend/package-lock.json* .
 
 # Install dependencies
-WORKDIR /app/frontend
-# If package-lock exists, it will use it. If not, it generates one.
 RUN npm install
 
 # Copy source code

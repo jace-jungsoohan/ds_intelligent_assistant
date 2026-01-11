@@ -145,6 +145,11 @@ WHERE
     AND t2.temp_excursion_duration_min >= 60 -- Use pre-calculated duration from master
     AND t1.shock_g > 0
 
+
+
+Previous Conversation Context:
+{chat_history}
+
 Question: {question}
 SQL Query:
 """
@@ -197,14 +202,24 @@ class SQLAgent:
         self.chain = sql_generator_chain
         self.synthesis_chain = synthesis_chain
     
-    def process_query(self, question: str) -> Dict[str, Any]:
+    def process_query(self, question: str, chat_history: list = None) -> Dict[str, Any]:
         from datetime import date
         current_date = date.today().isoformat()
         
+        # Format history logic
+        history_str = ""
+        if chat_history:
+            recent_history = chat_history[-6:] # Context window 6
+            for msg in recent_history:
+                role = "User" if msg.get("role") == "user" else "Assistant"
+                content = msg.get("content", "")
+                history_str += f"{role}: {content}\n"
+
         # 1. Generate SQL
         generated_sql = self.chain.invoke({
             "question": question, 
-            "current_date": current_date
+            "current_date": current_date,
+            "chat_history": history_str
         })
         
         print(f"DEBUG: Generated SQL for '{question}': [{generated_sql}]") # Debug log

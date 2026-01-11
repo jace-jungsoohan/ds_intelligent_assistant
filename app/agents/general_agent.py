@@ -29,15 +29,28 @@ class GeneralAgent:
         **Tone:**
         Professional, helpful, and concise. Korean language is preferred.
         
+        Previous Conversation:
+        {chat_history}
+        
         User Question: {question}
         Answer:
         """)
         
         self.chain = self.prompt | self.llm | StrOutputParser()
 
-    def process_query(self, question: str):
+    def process_query(self, question: str, chat_history: list = None):
+        # Format history logic
+        history_str = ""
+        if chat_history:
+            # Take last 5 turns to save tokens
+            recent_history = chat_history[-10:] 
+            for msg in recent_history:
+                role = "User" if msg.get("role") == "user" else "Assistant"
+                content = msg.get("content", "")
+                history_str += f"{role}: {content}\n"
+        
         try:
-            return self.chain.invoke({"question": question})
+            return self.chain.invoke({"question": question, "chat_history": history_str})
         except Exception as e:
             return f"죄송합니다. 일반 대화를 처리하는 중 오류가 발생했습니다: {str(e)}"
 

@@ -12,7 +12,7 @@ from app.agents.retrieval_agent import retrieval_agent as retrieval_agent_instan
 from app.agents.general_agent import general_agent as general_agent_instance
 
 class Orchestrator:
-    def run(self, question: str):
+    def run(self, question: str, chat_history: list = None):
         print(f"User Query: {question}")
         
         # 1. Route
@@ -23,7 +23,7 @@ class Orchestrator:
         response = None
         if target_agent == "SQL_AGENT":
             print("--- Invoking SQL Agent ---")
-            response = sql_agent_instance.process_query(question)
+            response = sql_agent_instance.process_query(question, chat_history)
             
             # Use natural language response from synthesis
             if response.get("natural_response"):
@@ -43,7 +43,7 @@ class Orchestrator:
             
         elif target_agent == "GENERAL_AGENT":
             print("--- Invoking General Agent ---")
-            final_answer = general_agent_instance.process_query(question)
+            final_answer = general_agent_instance.process_query(question, chat_history)
             
         else:
             final_answer = "Unknown agent selected."

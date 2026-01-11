@@ -155,7 +155,8 @@ def process_message():
     try:
         with st.spinner("데이터를 분석하고 있습니다..."):
             # Result is now a dict: {'text': ..., 'data': ..., 'sql': ...}
-            result_payload = st.session_state.orchestrator.run(prompt)
+            # Pass history excluding the most recent user message
+            result_payload = st.session_state.orchestrator.run(prompt, st.session_state.messages[:-1])
             
             if isinstance(result_payload, dict):
                 response_text = result_payload.get("text", "")

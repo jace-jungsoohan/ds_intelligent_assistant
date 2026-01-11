@@ -58,6 +58,39 @@ graph TD
     *   `General Agent`: LLM 기반 일반 대화 수행 및 물류 용어 설명 (이전 대화 맥락 반영).
 4.  **출력 (Output)**: 텍스트 답변 및 자동 생성된 데이터 시각화(차트) 제공.
 
+### 2.3 데이터 파이프라인 (ETL)
+원천 데이터(SCM)가 분석용 마트(RAG)로 변환되는 과정입니다.
+
+```mermaid
+flowchart LR
+    subgraph Raw [Raw Data Source (RAG Dataset)]
+        T[raw_transport<br/>(운송 원천)]
+        F[raw_sensor<br/>(센서 원천)]
+    end
+
+    subgraph Transform [Extract & Transform]
+        Q1[Data Cleaning<br/>(Null 제거 / 정규화)]
+        Q2[Transport Mode<br/>Mapping (소문자화)]
+        Q3[Feature Engineering<br/>(Risk Score 계산)]
+    end
+
+    subgraph Mart [Data Mart (RAG)]
+        M1[mart_logistics_master<br/>(Master)]
+        M2[mart_sensor_detail<br/>(Detail)]
+        M3[mart_risk_heatmap<br/>(Aggr)]
+    end
+
+    T --> Q1
+    F --> Q1
+    
+    Q1 --> Q2
+    Q2 --> M1
+    Q2 --> M2
+    
+    M2 --> Q3
+    Q3 --> M3
+```
+
 ---
 
 ## 3. 🧠 LLM 구조 및 에이전트 (LLM Structure)

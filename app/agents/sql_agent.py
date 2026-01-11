@@ -47,7 +47,7 @@ Available tables (always use fully qualified names with backticks):
      - departure_date (DATE): Partition Key - use for time filtering (e.g., "이번 달", "최근 1주일")
      - destination (STRING): Port code (e.g., 'CNSHG')
      - product (STRING)
-     - transport_mode (STRING): 'Air', 'Truck', 'Ocean+Ferry', 'Ocean+Rail' (Note: 'Ocean' usually appears as composites)
+     - transport_mode (STRING): 'air', 'truck', 'ocean+ferry', 'ocean+rail' (Note: Raw data is lowercase. 'ocean' often appears in composites.)
      - package_type (STRING): Packaging type
      - cumulative_shock_index (FLOAT): "Fatigue" or "Cumulative Stress" score
      - risk_level (STRING): 'Low', 'Medium', 'High', 'Critical'
@@ -61,7 +61,7 @@ Available tables (always use fully qualified names with backticks):
      - code (STRING): Shipment ID (Join Key)
      - destination (STRING): Port code
      - destination_country (STRING): 'China', 'Japan', 'Vietnam', 'Korea', 'USA', 'Other'
-     - transport_mode (STRING): 'Air', 'Truck', 'Ocean+Ferry', 'Ocean+Rail' - DIRECTLY AVAILABLE, no JOIN needed
+     - transport_mode (STRING): 'air', 'truck', 'ocean+ferry', 'ocean+rail' - DIRECTLY AVAILABLE. Use lowercase or LIKE '%ocean%'.
      - shock_g (FLOAT), temperature (FLOAT), humidity (FLOAT)
      - acc_x, acc_y, acc_z (FLOAT): Directional acceleration
      - tilt_x, tilt_y (FLOAT): Tilt angles
@@ -80,6 +80,7 @@ Scenario Guidelines (Whitepaper Analytics):
 - **Benchmarking/Comparison**: Query `mart_quality_matrix`.
 - **Composite Conditions (e.g. Temp < 0 & Shock > 5)**: Query `mart_sensor_detail`.
 - **Country filtering**: Use `destination_country` in `mart_sensor_detail` (e.g., WHERE destination_country = 'China').
+- **Transport Mode**: Use LOWERCASE values ('ocean', 'air', 'truck') or `LIKE` for safety (e.g. `WHERE transport_mode LIKE 'ocean%'`).
 - **Time filtering**: Use `departure_date` or `event_date` with DATE functions:
   - "이번 달": `WHERE event_date >= DATE_TRUNC(CURRENT_DATE(), MONTH)`
   - "최근 1주일": `WHERE event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)`
@@ -109,7 +110,7 @@ SELECT
     SAFE_DIVIDE(COUNTIF(t1.shock_g >= 5), COUNT(*)) as high_shock_ratio
 FROM `willog-prod-data-gold.rag.mart_sensor_detail` t1
 JOIN `willog-prod-data-gold.rag.mart_logistics_master` t2 ON t1.code = t2.code
-WHERE t2.transport_mode = 'Ocean' -- Optional: Remove WHERE to see all modes
+WHERE t2.transport_mode LIKE 'ocean%' -- Use LIKE for safety or 'ocean'
 GROUP BY 1
 
 2. "베트남행 화물 중 습도 이탈 구간" (Route/Location Analysis)

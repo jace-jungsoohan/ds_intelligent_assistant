@@ -63,18 +63,18 @@ graph TD
 
 ```mermaid
 flowchart LR
-    subgraph Raw [Raw Data Source (RAG Dataset)]
+    subgraph Raw ["Raw Data Source (RAG Dataset)"]
         T[corning_transport<br/>(Master Info)]
         F[corning_merged<br/>(Sensor Logs)]
     end
 
-    subgraph Transform [Extract & Transform]
+    subgraph Transform ["Extract & Transform"]
         Q1[Data Cleaning<br/>(Join & Filter)]
         Q2[Transport Mode<br/>Mapping (shipmode)]
         Q3[Risk Scoring<br/>(Shock/Temp Analysis)]
     end
 
-    subgraph Mart [Data Mart (RAG)]
+    subgraph Mart ["Data Mart (RAG)"]
         M1[mart_logistics_master]
         M2[mart_sensor_detail]
         M3[mart_risk_heatmap]

@@ -20,6 +20,10 @@ app.add_middleware(
 # Include API Routes
 app.include_router(api_router, prefix="/api")
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "version": "1.0.0"}
+
 # Serve Static Files (Frontend)
 from fastapi.staticfiles import StaticFiles
 import os
@@ -28,10 +32,6 @@ static_dir = os.path.join(os.getcwd(), "static")
 if os.path.exists(static_dir):
     # Mount static directory to root, html=True allows serving index.html
     app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
-
-@app.get("/health")
-def health_check():
-    return {"status": "ok", "version": "1.0.0"}
 
 if __name__ == "__main__":
     import uvicorn

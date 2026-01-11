@@ -99,6 +99,31 @@ export default function Home() {
             );
         }
 
+        const latCol = columns.find(c => c.toLowerCase().includes('lat'));
+        const lonCol = columns.find(c => c.toLowerCase().includes('lon') || c.toLowerCase().includes('lng'));
+
+        if (latCol && lonCol) {
+            const valCol = columns.find(c => c !== latCol && c !== lonCol && typeof data[0][c] === 'number');
+            return (
+                <div style={{ height: 400, width: '100%', marginTop: 20 }}>
+                    <h4 style={{ marginBottom: 10, color: '#444' }}>🗺️ Geospatial Distribution</h4>
+                    <div style={{ background: '#f9f9f9', borderRadius: 12, padding: 10, height: '100%', border: '1px solid #eee' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis type="number" dataKey={lonCol} name="Longitude" domain={['auto', 'auto']} fontSize={12} />
+                                <YAxis type="number" dataKey={latCol} name="Latitude" domain={['auto', 'auto']} fontSize={12} />
+                                <ZAxis type="number" dataKey={valCol || undefined} range={[60, 400]} name={valCol || "Value"} />
+                                <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 8 }} />
+                                <Legend />
+                                <Scatter name={valCol || "Locations"} data={data} fill="#ff7300" />
+                            </ScatterChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            );
+        }
+
         if (catCol && numCol) {
             return (
                 <div style={{ height: 300, width: '100%', marginTop: 20 }}>

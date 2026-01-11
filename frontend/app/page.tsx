@@ -2,11 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-    LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    LineChart, Line, BarChart, Bar, ScatterChart, Scatter, ZAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
-// Lucide icons (available in package.json)
-// If build fails, we can fall back to emojis. But let's try emojis first to be safe as import might tricky if type definition missing.
-// Actually Step 2621 restored lucide-react. But to be safe and consistent with "system-ui" style, I will use Emojis for now.
 
 interface Message {
     role: 'user' | 'assistant';
@@ -17,11 +14,16 @@ interface Message {
 }
 
 const SUGGESTIONS = [
-    "📈 최근 30일 일별 충격 발생 추이",
-    "📊 운송 모드별 파손율 비교",
-    "⚠️ 리스크 등급이 'Critical'인 화물 Top 5",
-    "🚢 베트남향 화물 온도 현황",
-    "🗺️ 충격 리스크 히트맵"
+    "📉 상하이(CNSHG)행 총 물량 및 파손율",
+    "🔥 구간별 충격 리스크 히트맵 분석",
+    "⚠️ 누적 충격 피로도 Top 5 운송 건",
+    "🍬 오사카행 온도 이탈 평균 지속 시간",
+    "📊 포장 타입별 파손율 및 안전 점수 비교",
+    "🛳️ 해상 운송 중 5G 이상 충격 발생 비율",
+    "📍 베트남 경로 습도 취약 구간 분석",
+    "❄️ 영하 온도에서 발생한 충격 건수",
+    "🏆 운송사별 배송 품질 벤치마킹",
+    "🚨 최근 1주일 High Risk 등급 운송 건"
 ];
 
 export default function Home() {
@@ -81,6 +83,7 @@ export default function Home() {
         const numCol = columns.find(c => typeof data[0][c] === 'number');
         const catCol = columns.find(c => typeof data[0][c] === 'string');
 
+        // 1. Time Series (Line Chart)
         if (dateCol && numCol) {
             return (
                 <div style={{ height: 300, width: '100%', marginTop: 20 }}>
@@ -99,11 +102,15 @@ export default function Home() {
             );
         }
 
-        const latCol = columns.find(c => c.toLowerCase().includes('lat'));
-        const lonCol = columns.find(c => c.toLowerCase().includes('lon') || c.toLowerCase().includes('lng'));
+        // 2. Geospatial (Scatter Chart)
+        // Check for common Lat/Lon column names case-insensitively
+        const latCol = columns.find(c => /lat/i.test(c));
+        const lonCol = columns.find(c => /lon|lng/i.test(c));
 
         if (latCol && lonCol) {
             const valCol = columns.find(c => c !== latCol && c !== lonCol && typeof data[0][c] === 'number');
+
+            // Safe Scatter Configuration
             return (
                 <div style={{ height: 400, width: '100%', marginTop: 20 }}>
                     <h4 style={{ marginBottom: 10, color: '#444' }}>🗺️ Geospatial Distribution</h4>
@@ -111,9 +118,11 @@ export default function Home() {
                         <ResponsiveContainer width="100%" height="100%">
                             <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis type="number" dataKey={lonCol} name="Longitude" domain={['auto', 'auto']} fontSize={12} />
-                                <YAxis type="number" dataKey={latCol} name="Latitude" domain={['auto', 'auto']} fontSize={12} />
-                                <ZAxis type="number" dataKey={valCol || undefined} range={[60, 400]} name={valCol || "Value"} />
+                                <XAxis type="number" dataKey={lonCol} name="Longitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
+                                <YAxis type="number" dataKey={latCol} name="Latitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
+                                {valCol && (
+                                    <ZAxis type="number" dataKey={valCol} range={[60, 400]} name={valCol} />
+                                )}
                                 <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 8 }} />
                                 <Legend />
                                 <Scatter name={valCol || "Locations"} data={data} fill="#ff7300" />
@@ -124,6 +133,7 @@ export default function Home() {
             );
         }
 
+        // 3. Comparison (Bar Chart)
         if (catCol && numCol) {
             return (
                 <div style={{ height: 300, width: '100%', marginTop: 20 }}>

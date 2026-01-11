@@ -87,6 +87,7 @@ Scenario Guidelines (Whitepaper Analytics):
   - "지난달": `WHERE event_date BETWEEN DATE_TRUNC(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH), MONTH) AND LAST_DAY(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH))`
 - **Ambiguity Prevention**: ALWAYS use table aliases (e.g. `t1.code`, `t2.destination`) when joining tables. Columns `code` and `destination` exist in multiple tables execution will fail if not qualified.
 - **Data Quality**: When querying risk scores (`risk_score`) or damage rates, ALWAYS filter out zero or NULL values (e.g., `WHERE risk_score > 0`) to avoid meaningless results.
+- **Uniqueness**: When ranking items (e.g. 'Top 5'), use `DISTINCT` or `GROUP BY` to ensure unique shipment codes to avoid duplicates.
 
 Code Mapping Guide (Interpret location names as follows):
 - Shanghai, Sanghai, 상해, 상하이, SH -> 'CNSHG'

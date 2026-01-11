@@ -64,20 +64,21 @@ graph TD
 ```mermaid
 flowchart LR
     subgraph Raw [Raw Data Source (RAG Dataset)]
-        T[raw_transport<br/>(운송 원천)]
-        F[raw_sensor<br/>(센서 원천)]
+        T[corning_transport<br/>(Master Info)]
+        F[corning_merged<br/>(Sensor Logs)]
     end
 
     subgraph Transform [Extract & Transform]
-        Q1[Data Cleaning<br/>(Null 제거 / 정규화)]
-        Q2[Transport Mode<br/>Mapping (소문자화)]
-        Q3[Feature Engineering<br/>(Risk Score 계산)]
+        Q1[Data Cleaning<br/>(Join & Filter)]
+        Q2[Transport Mode<br/>Mapping (shipmode)]
+        Q3[Risk Scoring<br/>(Shock/Temp Analysis)]
     end
 
     subgraph Mart [Data Mart (RAG)]
-        M1[mart_logistics_master<br/>(Master)]
-        M2[mart_sensor_detail<br/>(Detail)]
-        M3[mart_risk_heatmap<br/>(Aggr)]
+        M1[mart_logistics_master]
+        M2[mart_sensor_detail]
+        M3[mart_risk_heatmap]
+        M4[mart_quality_matrix]
     end
 
     T --> Q1
@@ -89,6 +90,7 @@ flowchart LR
     
     M2 --> Q3
     Q3 --> M3
+    M1 --> M4
 ```
 
 ---

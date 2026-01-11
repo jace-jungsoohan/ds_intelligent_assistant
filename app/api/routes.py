@@ -21,35 +21,51 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     answer: str
-    # we could add sources, charts data structure here later
+    data: Optional[List[dict]] = None
+    sql: Optional[str] = None
+    agent: Optional[str] = None
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     try:
-        # Extract the latest user message
         if not request.messages:
             raise HTTPException(status_code=400, detail="No messages provided")
         
         last_message = request.messages[-1]
-        if last_message.role != "user":
-            raise HTTPException(status_code=400, detail="Last message must be from user")
-            
+        
         user_query = last_message.content
         
-        # Extract history (excluding the last one)
-        # Convert Pydantic models to list of dicts or whatever format agents expect
-        # Agents expect: [{"role": "user", "content": "..."}, ...]
         history = [
             {"role": m.role, "content": m.content} 
             for m in request.messages[:-1]
         ]
         
-        # Run Orchestrator
         logger.info(f"Processing query: {user_query}")
         result = orchestrator.run(user_query, chat_history=history)
         
-        # result is currently a string (response text)
-        return ChatResponse(answer=result)
+        # Extract data
+        answer_text = result.get("text", "")
+        data_payload = None
+        
+        raw_data = result.get("data")
+        if raw_data is not None:
+            # Assuming raw_data is a Pandas DataFrame
+            # Convert NaN to None for invalid JSON fix
+            try:
+                import pandas as pd
+                if isinstance(raw_data, pd.DataFrame):
+                    # Replace NaN with None (which becomes null in JSON)
+                    df_clean = raw_data.where(pd.notnull(raw_data), None)
+                    data_payload = df_clean.to_dict(orient="records")
+            except Exception as e:
+                logger.warning(f"Failed to serialize DataFrame: {e}")
+        
+        return ChatResponse(
+            answer=answer_text,
+            data=data_payload,
+            sql=result.get("sql"),
+            agent=result.get("agent")
+        )
         
     except Exception as e:
         logger.error(f"Error processing chat request: {e}", exc_info=True)

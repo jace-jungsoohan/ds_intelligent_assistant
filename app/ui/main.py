@@ -280,5 +280,5 @@ with st.sidebar:
         st.rerun()
     st.markdown("---")
     st.markdown("**Version**: 0.4.0")
-    st.markdown("**Model**: gemini-3.0-flash")
+    st.markdown("**Model**: gemini-2.5-flash")
     st.markdown("**Connected**: BigQuery (Seoul)")

@@ -16,7 +16,7 @@
     *   **개선점**:
         *   운송 모드(`Air`, `Truck`, `Ocean+Ferry`, `Ocean+Rail`)를 세밀하게 구분하여 처리.
         *   국가별 필터링(`destination_country`) 및 시간 분석(`departure_date`) 능력 강화.
-        *   `gemini-3.0-flash` 모델을 사용하여 정확도 높은 SQL 작성.
+        *   `gemini-2.5-flash` 모델을 사용하여 정확도 높은 SQL 작성.
 2.  **General Agent (대화형 비서)**
     *   **역할**: 인사말("안녕"), 기능 문의("너 뭐 할 수 있어?"), 일반적인 물류 용어 정의 등 SQL 실행이 불필요한 대화를 처리합니다.
     *   **효과**: 불필요한 데이터베이스 조회를 방지하고 자연스러운 사용자 경험(UX) 제공.
@@ -51,7 +51,7 @@ Whitepaper 시나리오 분석을 지원하기 위해 Raw 데이터를 목적에
 ## 2. 📝 변경 이력 (Last Sprint)
 
 1.  **Transport Mode 세분화**: 사용자의 요청에 따라 `Ocean` 단일 모드를 `Ocean+Ferry`, `Ocean+Rail` 등 복합 모드로 세분화하여 정확한 분석 지원.
-2.  **LLM 모델 업그레이드**: 최신 성능 확보 및 추론 능력 강화를 위해 **`gemini-3.0-flash`** 모델로 전체 시스템 업그레이드 완료.
+2.  **LLM 모델 조정**: `gemini-3.0-flash` 도입을 시도했으나 리전 가용성 이슈로 인해 안정적인 **`gemini-2.5-flash`** 모델로 롤백.
 3.  **Fallback Logic 강화**: 라우터가 대화형 질문을 SQL로 잘못 인식하지 않도록 키워드 기반 안전장치(Fallback) 추가.
 
 ---

@@ -14,7 +14,7 @@
 - **BigQuery**: 실제 데이터 소스 (모든 데이터 조회는 BigQuery를 통해)
 
 **기술 스택**:
-- **LLM**: Google Vertex AI (gemini-3.0-flash)
+- **LLM**: Google Vertex AI (gemini-2.5-flash)
 - **프레임워크**: LangChain
 - **데이터**: BigQuery (`willog-prod-data-gold.rag`)
 - **언어**: Python 3.9+
@@ -118,7 +118,7 @@ ds_intelligent_assistant/
 
 ### 4.1 SQL Agent (`app/agents/sql_agent.py`)
 - **기능**: 자연어 질문을 BigQuery SQL로 변환
-- **모델**: `gemini-3.0-flash` (Vertex AI)
+- **모델**: `gemini-2.5-flash` (Vertex AI)
 - **프롬프트**: 테이블 스키마 정보를 동적 주입하여 정확한 SQL 생성 유도
 
 ### 4.2 Router (`app/agents/router.py`)

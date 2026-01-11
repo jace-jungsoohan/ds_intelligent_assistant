@@ -105,6 +105,27 @@ graph TD
 
 RAG 시스템을 위해 최적화된 BigQuery Mart (`willog-prod-data-gold.rag`) 스키마입니다.
 
+### 5.0 개체 관계도 (ERD)
+```mermaid
+erDiagram
+    mart_logistics_master ||--o{ mart_sensor_detail : "1:N 관계"
+    
+    mart_logistics_master {
+        STRING code PK "운송장 번호"
+        STRING risk_level "리스크"
+    }
+
+    mart_sensor_detail {
+        STRING code FK "운송장 번호"
+        FLOAT shock_g "충격량"
+    }
+
+    mart_risk_heatmap {
+        FLOAT risk_score "위험도"
+    }
+```
+*(상세 스키마는 아래 표 참조)*
+
 ### 5.1 `mart_logistics_master` (운송 건 마스터)
 운송 건 단위의 종합 정보를 담고 있습니다.
 

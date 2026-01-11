@@ -7,7 +7,7 @@ from app.core.config import settings
 class GeneralAgent:
     def __init__(self):
         self.llm = ChatVertexAI(
-            model_name="gemini-2.5-flash",
+            model_name="gemini-3.0-flash",
             project=settings.PROJECT_ID,
             location=settings.LOCATION,
             temperature=0.7 # Sligthly higher temp for better conversation

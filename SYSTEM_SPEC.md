@@ -11,7 +11,7 @@
 - **인프라**:
     - **클라우드**: Google Cloud Platform (GCP)
     - **컴퓨팅**: Cloud Run (Serverless Container)
-    - **LLM 모델**: Vertex AI (`gemini-2.5-flash`)
+    - **LLM 모델**: Vertex AI (`gemini-3.0-flash`)
     - **데이터 웨어하우스**: BigQuery
 - **배포**:
     - **CI/CD**: GitHub -> Google Cloud Build -> Cloud Run
@@ -37,11 +37,11 @@ graph TD
     Router -->|일반 대화| General[일반 에이전트]
     Router -->|문서 검색| Retrieval[검색 에이전트]
     
-    SQL -->|SQL 생성| LLM1[Gemini-2.5-flash]
-    SQL -->|SQL 실행| BQ[(BigQuery Mart)]
-    SQL -->|답변 생성| LLM1
+    SQL -->|Generate SQL| LLM1[Gemini-3.0-flash]
+    SQL -->|Execute SQL| BQ[(BigQuery Mart)]
+    SQL -->|Synthesize| LLM1
     
-    General -->|대화 수행| LLM2[Gemini-2.5-flash]
+    General -->|Chat| LLM2[Gemini-3.0-flash]
     
     Retrieval -->|문서 검색| VectorDB[(Vector Store)]
     
@@ -62,7 +62,7 @@ graph TD
 
 ## 3. 🧠 LLM 구조 및 에이전트 (LLM Structure)
 
-### 3.1 Router Agent (`gemini-2.5-flash`)
+### 3.1 Router Agent (`gemini-3.0-flash`)
 - **역할**: 사용자 질문의 의도를 분류하여 적절한 전문가 에이전트에게 전달.
 - **분류 로직**:
     - 통계/수치/데이터 질문 -> `SQL_AGENT`

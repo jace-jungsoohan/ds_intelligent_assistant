@@ -14,10 +14,10 @@ from app.core.config import settings
 # Initialize Vertex AI Model
 try:
     llm = ChatVertexAI(
-        model_name="gemini-2.5-flash",
+        model_name="gemini-3.0-flash",
         project=settings.PROJECT_ID,
         location=settings.LOCATION,
-        temperature=0
+        temperature=0,
     )
 except Exception as e:
     print(f"Warning: Router LLM init failed: {e}")

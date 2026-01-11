@@ -1,4 +1,23 @@
-# Backend Only Deployment (Frontend Build Skipped)
+# Stage 1: Build Frontend (Next.js)
+FROM node:20-slim AS builder
+WORKDIR /app/frontend
+
+# Copy package files
+COPY frontend/package.json .
+COPY frontend/package-lock.json* .
+
+# Install dependencies
+RUN npm install --force --no-audit
+
+# Copy source code
+COPY frontend/ .
+
+# Build Next.js
+ENV NODE_ENV=production
+RUN npm run build
+
+
+# Stage 2: Production Backend (FastAPI + Static Files)
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -15,9 +34,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy Application Code (Backend)
 COPY . .
 
-# Copy Dummy Static Files instead of building frontend
-RUN mkdir -p /app/static
-COPY static/ /app/static/
+# Copy Built Frontend from builder stage
+COPY --from=builder /app/frontend/out /app/static
 
 # Expose Port
 EXPOSE 8080

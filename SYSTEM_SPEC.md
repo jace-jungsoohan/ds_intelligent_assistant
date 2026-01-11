@@ -64,14 +64,14 @@ graph TD
 ```mermaid
 flowchart LR
     subgraph Raw ["Raw Data Source (RAG Dataset)"]
-        T[corning_transport<br/>(Master Info)]
-        F[corning_merged<br/>(Sensor Logs)]
+        T["corning_transport<br/>(Master Info)"]
+        F["corning_merged<br/>(Sensor Logs)"]
     end
 
     subgraph Transform ["Extract & Transform"]
-        Q1[Data Cleaning<br/>(Join & Filter)]
-        Q2[Transport Mode<br/>Mapping (shipmode)]
-        Q3[Risk Scoring<br/>(Shock/Temp Analysis)]
+        Q1["Data Cleaning<br/>(Join & Filter)"]
+        Q2["Transport Mode<br/>Mapping (shipmode)"]
+        Q3["Risk Scoring<br/>(Shock/Temp Analysis)"]
     end
 
     subgraph Mart ["Data Mart (RAG)"]

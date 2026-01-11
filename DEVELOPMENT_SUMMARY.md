@@ -62,8 +62,8 @@
 ### 📚 주요 정보 및 컨텍스트
 
 *   **데이터 소스 (Live)**:
-    *   모든 데이터는 **BigQuery `scm` 데이터셋의 실제 테이블**(`corning_transport`, `corning_features`)로부터 실시간으로 집계됩니다.
-    *   `rag` 데이터셋의 뷰(View)들은 실제 원천 테이블을 참조하도록 구성되어 있어 데이터 정합성이 보장됩니다.
+    *   모든 데이터는 **BigQuery `rag` 데이터셋의 원천 테이블**(`corning_transport`, `corning_merged`)로부터 실시간으로 집계됩니다.
+    *   `rag` 데이터셋의 마트(Mart)들은 실제 원천 테이블을 참조하도록 구성되어 있어 데이터 정합성이 보장됩니다.
 
 *   **구현된 기능**:
     *   **SQL Agent**: 자연어 질문을 BigQuery SQL로 변환하여 실제 데이터를 분석합니다.

@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { ChatMessage } from './components/chat-message';
-import { ChatInput } from './components/chat-input';
+import React, { useState } from 'react';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -13,64 +11,92 @@ export default function Home() {
     const [messages, setMessages] = useState<Message[]>([
         { role: 'assistant', content: '안녕하세요! Willog AI Assistant입니다. 무엇을 도와드릴까요?' }
     ]);
+    const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const bottomRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+    const handleSend = async () => {
+        if (!input.trim() || loading) return;
 
-    const handleSend = async (content: string) => {
-        const newMessages = [...messages, { role: 'user', content } as Message];
+        const userMessage = input;
+        setInput('');
+        const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
         setMessages(newMessages);
         setLoading(true);
 
         try {
-            // In production, this should be an env var. For now assuming localhost default.
-            const API_URL = 'http://localhost:8000/api';
-
-            const response = await fetch(`${API_URL}/chat`, {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ messages: newMessages }),
             });
 
-            if (!response.ok) throw new Error('Failed to fetch response');
+            if (!response.ok) throw new Error('Failed');
 
             const data = await response.json();
             setMessages(prev => [...prev, { role: 'assistant', content: data.answer }]);
-        } catch (error) {
-            console.error(error);
-            setMessages(prev => [...prev, { role: 'assistant', content: '죄송합니다. 서버 연결에 실패했습니다. (Backend가 실행 중인지 확인해주세요)' }]);
+        } catch {
+            setMessages(prev => [...prev, { role: 'assistant', content: '서버 연결에 실패했습니다.' }]);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <main className="flex min-h-screen flex-col bg-white text-gray-900">
-            {/* Header */}
-            <header className="sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur-md px-6 py-4">
-                <div className="mx-auto max-w-3xl flex items-center gap-2">
-                    <div className="h-6 w-6 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-xs">W</span>
-                    </div>
-                    <h1 className="text-lg font-semibold tracking-tight">Willog AI Assistant</h1>
-                </div>
-            </header>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', fontFamily: 'system-ui' }}>
+            <h1 style={{ textAlign: 'center', color: '#1a1a1a' }}>Willog AI Assistant</h1>
 
-            {/* Chat Area */}
-            <div className="flex-1 w-full">
-                <div className="mx-auto max-w-3xl flex flex-col pb-36 pt-4">
-                    {messages.map((msg, idx) => (
-                        <ChatMessage key={idx} role={msg.role} content={msg.content} />
-                    ))}
-                    <div ref={bottomRef} />
-                </div>
+            <div style={{ border: '1px solid #e5e5e5', borderRadius: '12px', padding: '20px', minHeight: '400px', marginBottom: '20px', background: '#fafafa' }}>
+                {messages.map((msg, idx) => (
+                    <div key={idx} style={{
+                        padding: '12px 16px',
+                        margin: '8px 0',
+                        borderRadius: '12px',
+                        background: msg.role === 'user' ? '#0066ff' : '#ffffff',
+                        color: msg.role === 'user' ? '#ffffff' : '#1a1a1a',
+                        marginLeft: msg.role === 'user' ? '20%' : '0',
+                        marginRight: msg.role === 'user' ? '0' : '20%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                    }}>
+                        {msg.content}
+                    </div>
+                ))}
+                {loading && <div style={{ padding: '12px', color: '#666' }}>응답 생성 중...</div>}
             </div>
 
-            {/* Input Area */}
-            <ChatInput onSend={handleSend} disabled={loading} />
-        </main>
+            <div style={{ display: 'flex', gap: '10px' }}>
+                <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                    placeholder="메시지를 입력하세요..."
+                    disabled={loading}
+                    style={{
+                        flex: 1,
+                        padding: '14px 18px',
+                        borderRadius: '12px',
+                        border: '1px solid #e5e5e5',
+                        fontSize: '16px',
+                        outline: 'none'
+                    }}
+                />
+                <button
+                    onClick={handleSend}
+                    disabled={loading || !input.trim()}
+                    style={{
+                        padding: '14px 24px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: '#0066ff',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        opacity: loading || !input.trim() ? 0.5 : 1
+                    }}
+                >
+                    전송
+                </button>
+            </div>
+        </div>
     );
 }

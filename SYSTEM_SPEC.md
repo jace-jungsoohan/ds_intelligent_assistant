@@ -59,7 +59,7 @@ graph TD
 4.  **출력 (Output)**: 텍스트 답변 및 자동 생성된 데이터 시각화(차트) 제공.
 
 ### 2.3 데이터 파이프라인 (ETL)
-원천 데이터(SCM)가 분석용 마트(RAG)로 변환되는 과정입니다.
+원천 데이터(Raw Data)가 분석용 마트(Data Mart)로 변환되는 과정입니다.
 
 ```mermaid
 flowchart LR

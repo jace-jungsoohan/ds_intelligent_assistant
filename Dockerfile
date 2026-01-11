@@ -6,14 +6,16 @@ WORKDIR /app/frontend
 COPY frontend/package.json .
 COPY frontend/package-lock.json* .
 
-# Install dependencies
-RUN npm install --no-audit --prefer-offline
+# Install dependencies (Force to bypass peer-dep issues)
+RUN npm install --force --no-audit
 
 # Copy source code
 COPY frontend/ .
 
 # Build Next.js
-# This requires Next.js to be configured with output: 'export' in next.config.js
+# Ensure NODE_ENV is production
+ENV NODE_ENV=production
+# Run build (ignoring errors as configured in next.config.js)
 RUN npm run build
 
 
@@ -35,7 +37,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Copy Built Frontend from builder stage
-# We put it in /app/static, which FastAPI mounts
 COPY --from=builder /app/frontend/out /app/static
 
 # Expose Port

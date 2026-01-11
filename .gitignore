@@ -1,4 +1,19 @@
-*.json
+# System files
+.DS_Store
 .env
 __pycache__/
 *.pyc
+
+# Node
+node_modules/
+.next/
+
+# Secrets (Ignore all JSONs by default to catch keys)
+*.json
+
+# Allowlist for project config
+!package.json
+!tsconfig.json
+!frontend/package.json
+!frontend/tsconfig.json
+!frontend/package-lock.json

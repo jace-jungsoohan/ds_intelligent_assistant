@@ -1,3 +1,26 @@
+# Stage 1: Build Frontend (Next.js)
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Copy generic package.json first to cache deps
+# We copy everything inside frontend/ to . because docker context is root
+COPY frontend/package.json frontend/package.json
+COPY frontend/package-lock.json* frontend/
+
+# Install dependencies
+WORKDIR /app/frontend
+# If package-lock exists, it will use it. If not, it generates one.
+RUN npm install
+
+# Copy source code
+COPY frontend/ .
+
+# Build Next.js
+# This requires Next.js to be configured with output: 'export' in next.config.js
+RUN npm run build
+
+
+# Stage 2: Production Backend (FastAPI + Static Files)
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -7,19 +30,20 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
+# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir streamlit
 
-# Copy application code
+# Copy Application Code (Backend)
 COPY . .
 
-# Expose port
-EXPOSE 8080
+# Copy Built Frontend from builder stage
+# We put it in /app/static, which FastAPI mounts
+COPY --from=builder /app/frontend/out /app/static
 
-# Set environment variables
+# Expose Port
+EXPOSE 8080
 ENV PORT=8080
 
-# Run Streamlit
-CMD streamlit run app/ui/main.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true --server.enableCORS=false --server.enableXsrfProtection=false
+# Run FastAPI with Uvicorn
+CMD ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8080"]

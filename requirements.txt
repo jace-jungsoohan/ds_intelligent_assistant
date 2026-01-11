@@ -8,3 +8,5 @@ pydantic-settings
 db-dtypes
 streamlit
 plotly
+fastapi
+uvicorn

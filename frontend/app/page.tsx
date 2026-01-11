@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-    LineChart, Line, BarChart, Bar, ScatterChart, Scatter, ZAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    LineChart, Line, BarChart, Bar, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 
 interface Message {
@@ -108,14 +108,20 @@ export default function Home() {
         }
 
         // 2. Geospatial (Scatter Chart)
-        // Check for common Lat/Lon column names case-insensitively
         const latCol = columns.find(c => /lat/i.test(c));
         const lonCol = columns.find(c => /lon|lng/i.test(c));
 
         if (latCol && lonCol) {
+            // CRITICAL FIX: Filter valid numeric coordinates to prevent Recharts crash
+            const validData = data.filter(d =>
+                d[latCol] !== null && d[latCol] !== undefined && !isNaN(Number(d[latCol])) &&
+                d[lonCol] !== null && d[lonCol] !== undefined && !isNaN(Number(d[lonCol]))
+            );
+
+            if (validData.length === 0) return null;
+
             const valCol = columns.find(c => c !== latCol && c !== lonCol && typeof data[0][c] === 'number');
 
-            // Safe Scatter Configuration
             return (
                 <div style={{ height: 400, width: '100%', marginTop: 20 }}>
                     <h4 style={{ marginBottom: 10, color: '#444' }}>🗺️ Geospatial Distribution</h4>
@@ -125,14 +131,14 @@ export default function Home() {
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis type="number" dataKey={lonCol} name="Longitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
                                 <YAxis type="number" dataKey={latCol} name="Latitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
-                                {valCol && (
-                                    <ZAxis type="number" dataKey={valCol} range={[60, 400]} name={valCol} />
-                                )}
                                 <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 8 }} />
                                 <Legend />
-                                <Scatter name={valCol || "Locations"} data={data} fill="#ff7300" />
+                                <Scatter name={valCol || "Locations"} data={validData} fill="#ff7300" line={false} />
                             </ScatterChart>
                         </ResponsiveContainer>
+                    </div>
+                    <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#999', marginTop: 5 }}>
+                        * Displaying {validData.length} valid points
                     </div>
                 </div>
             );

@@ -1,5 +1,5 @@
 # Stage 1: Build Frontend (Next.js)
-FROM node:18-slim AS builder
+FROM node:20-slim AS builder
 WORKDIR /app/frontend
 
 # Copy package files
@@ -7,7 +7,7 @@ COPY frontend/package.json .
 COPY frontend/package-lock.json* .
 
 # Install dependencies
-RUN npm install
+RUN npm install --no-audit --prefer-offline
 
 # Copy source code
 COPY frontend/ .

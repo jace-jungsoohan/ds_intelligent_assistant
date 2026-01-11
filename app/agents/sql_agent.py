@@ -184,8 +184,9 @@ User Question: {question}
 SQL Query: {sql}
 Query Result: {result}
 
-If the result is empty, say "해당 조건에 맞는 데이터가 없습니다."
-Keep the answer concise and informative.
+If the result is empty or says "(empty)", say "해당 조건에 맞는 데이터가 없습니다."
+Otherwise, summarize the key findings from the result.
+Do NOT say there is no data if values are present.
 
 Answer:
 """
@@ -256,6 +257,7 @@ class SQLAgent:
             try:
                 # Convert DataFrame to string for LLM
                 result_str = result_df.to_string() if not result_df.empty else "(empty)"
+                print(f"DEBUG: Synthesis Input Result:\n{result_str}")
                 natural_response = self.synthesis_chain.invoke({
                     "question": question,
                     "sql": clean_sql,

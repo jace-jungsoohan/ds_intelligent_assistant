@@ -85,6 +85,7 @@ Scenario Guidelines (Whitepaper Analytics):
   - "이번 달": `WHERE event_date >= DATE_TRUNC(CURRENT_DATE(), MONTH)`
   - "최근 1주일": `WHERE event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)`
   - "지난달": `WHERE event_date BETWEEN DATE_TRUNC(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH), MONTH) AND LAST_DAY(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH))`
+- **Ambiguity Prevention**: ALWAYS use table aliases (e.g. `t1.code`, `t2.destination`) when joining tables. Columns `code` and `destination` exist in multiple tables execution will fail if not qualified.
 
 Code Mapping Guide (Interpret location names as follows):
 - Shanghai, Sanghai, 상해, 상하이, SH -> 'CNSHG'
@@ -100,7 +101,6 @@ Code Mapping Guide (Interpret location names as follows):
 - Vietnam, 베트남 -> destination_country = 'Vietnam' OR destination LIKE 'VN%'
 - Japan, 일본 -> destination_country = 'Japan' OR destination LIKE 'JP%'
 
-Example SQLs (Few-shot Learning):
 Example SQLs (Few-shot Learning):
 1. "🛳️ 해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)
 SELECT

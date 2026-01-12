@@ -88,9 +88,53 @@ export default function Home() {
             const columns = Object.keys(data[0]);
             if (columns.length === 0) return null;
 
-            const dateCol = columns.find(c => c.toLowerCase().includes('date') || c.toLowerCase().includes('day') || c.toLowerCase().includes('time'));
-            const numCol = columns.find(c => typeof data[0][c] === 'number');
-            const catCol = columns.find(c => typeof data[0][c] === 'string' && !c.toLowerCase().includes('lat') && !c.toLowerCase().includes('lon'));
+            const dateCol = columns.find(c => c.toLowerCase().includes('date') || c.toLowerCase().includes('day') || c.toLowerCase().includes('time') || c.toLowerCase().includes('month'));
+            const numCol = columns.find(c => typeof data[0][c] === 'number' && !c.toLowerCase().includes('lat') && !c.toLowerCase().includes('lon'));
+            const catCol = columns.find(c => typeof data[0][c] === 'string' && !c.toLowerCase().includes('date') && !c.toLowerCase().includes('timestamp') && !c.toLowerCase().includes('time'));
+
+            // 0. Stacked Trend Chart (Ratio/Share over Time)
+            // Trigger: Date + Number(Ratio/Percent) + Category
+            const isRatio = numCol && (numCol.includes('ratio') || numCol.includes('share') || numCol.includes('percent') || numCol.includes('비중'));
+
+            if (dateCol && catCol && numCol && isRatio) {
+                // Pivot Data for Stacked Chart
+                const pivotMap = new Map();
+                const categories = new Set<string>();
+
+                data.forEach(row => {
+                    const dateVal = row[dateCol];
+                    const catVal = row[catCol];
+                    const numVal = row[numCol];
+                    categories.add(String(catVal));
+
+                    if (!pivotMap.has(dateVal)) {
+                        pivotMap.set(dateVal, { [dateCol]: dateVal });
+                    }
+                    pivotMap.get(dateVal)[catVal] = numVal;
+                });
+
+                const chartData = Array.from(pivotMap.values()).sort((a, b) => new Date(a[dateCol]).getTime() - new Date(b[dateCol]).getTime());
+                const categoryList = Array.from(categories);
+                const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#a4de6c', '#d0ed57', '#8dd1e1', '#83a6ed', '#8e44ad', '#e74c3c'];
+
+                return (
+                    <div style={{ height: 400, width: '100%', marginTop: 20 }}>
+                        <h4 style={{ marginBottom: 10, color: '#444' }}>📊 Stacked Trend Analysis ({catCol})</h4>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey={dateCol} fontSize={12} tickMargin={10} />
+                                <YAxis fontSize={12} unit="%" />
+                                <Tooltip contentStyle={{ borderRadius: 8 }} />
+                                <Legend />
+                                {categoryList.map((cat, idx) => (
+                                    <Bar key={cat} dataKey={cat} stackId="a" fill={colors[idx % colors.length]} isAnimationActive={false} />
+                                ))}
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                );
+            }
 
             // 1. Time Series (Line Chart)
             if (dateCol && numCol) {

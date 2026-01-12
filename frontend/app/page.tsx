@@ -47,7 +47,6 @@ export default function Home() {
         const contentToUse = text || input;
         if (!contentToUse.trim() || loading) return;
 
-        // Clear input if typed
         if (!text) setInput('');
 
         const userMessage: Message = { role: 'user', content: contentToUse };
@@ -79,96 +78,160 @@ export default function Home() {
         }
     };
 
-    const renderVisualization = (data: any[], agent: string | undefined) => {
-        if (!data || data.length === 0) return null;
-
-        const columns = Object.keys(data[0]);
-
-        const dateCol = columns.find(c => c.includes('date') || c.includes('day') || c.includes('time'));
-        const numCol = columns.find(c => typeof data[0][c] === 'number');
-        const catCol = columns.find(c => typeof data[0][c] === 'string');
-
-        // 1. Time Series (Line Chart)
-        if (dateCol && numCol) {
-            return (
-                <div style={{ height: 300, width: '100%', marginTop: 20 }}>
-                    <h4 style={{ marginBottom: 10, color: '#444' }}>📈 Trend Analysis</h4>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey={dateCol} fontSize={12} tickMargin={10} />
-                            <YAxis fontSize={12} />
-                            <Tooltip contentStyle={{ borderRadius: 8 }} />
-                            <Legend />
-                            <Line type="monotone" dataKey={numCol} stroke="#8884d8" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-            );
+    const renderVisualization = (data: any[]) => {
+        // CRITICAL FIX: Early return for empty or invalid data
+        if (!data || !Array.isArray(data) || data.length === 0 || !data[0]) {
+            return null;
         }
 
-        // 2. Geospatial (Scatter Chart)
-        const latCol = columns.find(c => /lat/i.test(c));
-        const lonCol = columns.find(c => /lon|lng/i.test(c));
+        try {
+            const columns = Object.keys(data[0]);
+            if (columns.length === 0) return null;
 
-        if (latCol && lonCol) {
-            // Robust Data Mapping: standardizing x/y keys and ensuring numbers
-            const chartData = data
-                .filter(d =>
-                    d[latCol] != null && !isNaN(Number(d[latCol])) &&
-                    d[lonCol] != null && !isNaN(Number(d[lonCol]))
-                )
-                .map((d, i) => ({
-                    id: i,
-                    x: Number(d[lonCol]), // Longitude as X
-                    y: Number(d[latCol]), // Latitude as Y
-                    ...d // Keep original data for tooltip
-                }));
+            const dateCol = columns.find(c => c.toLowerCase().includes('date') || c.toLowerCase().includes('day') || c.toLowerCase().includes('time'));
+            const numCol = columns.find(c => typeof data[0][c] === 'number');
+            const catCol = columns.find(c => typeof data[0][c] === 'string' && !c.toLowerCase().includes('lat') && !c.toLowerCase().includes('lon'));
 
-            if (chartData.length === 0) return null;
-
-            return (
-                <div style={{ height: 400, width: '100%', marginTop: 20 }}>
-                    <h4 style={{ marginBottom: 10, color: '#444' }}>🗺️ Geospatial Distribution</h4>
-                    <div style={{ background: '#f9f9f9', borderRadius: 12, padding: 10, height: '100%', border: '1px solid #eee' }}>
+            // 1. Time Series (Line Chart)
+            if (dateCol && numCol) {
+                return (
+                    <div style={{ height: 300, width: '100%', marginTop: 20 }}>
+                        <h4 style={{ marginBottom: 10, color: '#444' }}>📈 Trend Analysis</h4>
                         <ResponsiveContainer width="100%" height="100%">
-                            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
+                            <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis type="number" dataKey="x" name="Longitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
-                                <YAxis type="number" dataKey="y" name="Latitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
-                                <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 8 }} />
+                                <XAxis dataKey={dateCol} fontSize={12} tickMargin={10} />
+                                <YAxis fontSize={12} />
+                                <Tooltip contentStyle={{ borderRadius: 8 }} />
                                 <Legend />
-                                <Scatter name="Locations" data={chartData} fill="#ff7300" isAnimationActive={false} />
-                            </ScatterChart>
+                                <Line type="monotone" dataKey={numCol} stroke="#8884d8" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={false} />
+                            </LineChart>
                         </ResponsiveContainer>
                     </div>
-                    <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#999', marginTop: 5 }}>
-                        * Displaying {chartData.length} valid points
+                );
+            }
+
+            // 2. Geospatial (Scatter Chart)
+            const latCol = columns.find(c => /lat/i.test(c));
+            const lonCol = columns.find(c => /lon|lng/i.test(c));
+
+            if (latCol && lonCol) {
+                const chartData = data
+                    .filter(d => d && d[latCol] != null && d[lonCol] != null && !isNaN(Number(d[latCol])) && !isNaN(Number(d[lonCol])))
+                    .map((d, i) => ({
+                        id: i,
+                        x: Number(d[lonCol]),
+                        y: Number(d[latCol]),
+                        ...d
+                    }));
+
+                if (chartData.length === 0) return null;
+
+                return (
+                    <div style={{ height: 400, width: '100%', marginTop: 20 }}>
+                        <h4 style={{ marginBottom: 10, color: '#444' }}>🗺️ Geospatial Distribution</h4>
+                        <div style={{ background: '#f9f9f9', borderRadius: 12, padding: 10, height: '100%', border: '1px solid #eee' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis type="number" dataKey="x" name="Longitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
+                                    <YAxis type="number" dataKey="y" name="Latitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
+                                    <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 8 }} />
+                                    <Legend />
+                                    <Scatter name="Locations" data={chartData} fill="#ff7300" isAnimationActive={false} />
+                                </ScatterChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#999', marginTop: 5 }}>
+                            * Displaying {chartData.length} valid points
+                        </div>
                     </div>
-                </div>
-            );
-        }
+                );
+            }
 
-        // 3. Comparison (Bar Chart)
-        if (catCol && numCol) {
+            // 3. Comparison (Bar Chart)
+            if (catCol && numCol) {
+                return (
+                    <div style={{ height: 300, width: '100%', marginTop: 20 }}>
+                        <h4 style={{ marginBottom: 10, color: '#444' }}>📊 Comparison</h4>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey={catCol} fontSize={12} tickMargin={10} />
+                                <YAxis fontSize={12} />
+                                <Tooltip contentStyle={{ borderRadius: 8 }} />
+                                <Legend />
+                                <Bar dataKey={numCol} fill="#82ca9d" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                );
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Visualization error:', error);
             return (
-                <div style={{ height: 300, width: '100%', marginTop: 20 }}>
-                    <h4 style={{ marginBottom: 10, color: '#444' }}>📊 Comparison</h4>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey={catCol} fontSize={12} tickMargin={10} />
-                            <YAxis fontSize={12} />
-                            <Tooltip contentStyle={{ borderRadius: 8 }} />
-                            <Legend />
-                            <Bar dataKey={numCol} fill="#82ca9d" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                <div style={{ padding: 12, background: '#fff3cd', borderRadius: 8, marginTop: 12, color: '#856404' }}>
+                    ⚠️ 차트 렌더링 중 오류가 발생했습니다.
+                </div>
+            );
+        }
+    };
+
+    const renderTable = (data: any[]) => {
+        // CRITICAL FIX: Validate data before rendering table
+        if (!data || !Array.isArray(data) || data.length === 0 || !data[0]) {
+            return (
+                <div style={{ padding: 16, textAlign: 'center', color: '#888', background: '#f9f9f9', borderRadius: 8 }}>
+                    데이터가 없습니다.
                 </div>
             );
         }
 
-        return null;
+        try {
+            const columns = Object.keys(data[0]);
+            if (columns.length === 0) return null;
+
+            return (
+                <div style={{ marginTop: 20, overflow: 'hidden', border: '1px solid #eee', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                    <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', minWidth: 600 }}>
+                            <thead style={{ position: 'sticky', top: 0, background: '#f9fafb' }}>
+                                <tr>
+                                    {columns.map(key => (
+                                        <th key={key} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#555', borderBottom: '1px solid #eee' }}>{key}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {data.slice(0, 10).map((row, i) => (
+                                    <tr key={i} style={{ borderBottom: '1px solid #f5f5f5', background: 'white' }}>
+                                        {columns.map((col, j) => (
+                                            <td key={j} style={{ padding: '10px 14px', color: '#333' }}>
+                                                {row[col] !== null && row[col] !== undefined ? String(row[col]) : '-'}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {data.length > 10 && (
+                        <div style={{ padding: '8px', textAlign: 'center', fontSize: '0.75rem', color: '#888', background: '#fafafa', borderTop: '1px solid #eee' }}>
+                            Showing first 10 rows of {data.length}
+                        </div>
+                    )}
+                </div>
+            );
+        } catch (error) {
+            console.error('Table rendering error:', error);
+            return (
+                <div style={{ padding: 12, background: '#fff3cd', borderRadius: 8, marginTop: 12, color: '#856404' }}>
+                    ⚠️ 테이블 렌더링 중 오류가 발생했습니다.
+                </div>
+            );
+        }
     };
 
     return (
@@ -207,7 +270,6 @@ export default function Home() {
                             {msg.content}
                         </div>
 
-                        {/* SQL Debug Block */}
                         {msg.sql && (
                             <details style={{ marginTop: 8, maxWidth: '85%', width: '100%' }}>
                                 <summary style={{ cursor: 'pointer', fontSize: '0.75rem', color: '#888', listStyle: 'none' }}>🛠️ Generated SQL</summary>
@@ -220,45 +282,12 @@ export default function Home() {
                             </details>
                         )}
 
-                        {/* Data Visualization & Table */}
                         {msg.data && (
                             <div style={{ width: '100%', marginTop: 12, maxWidth: '100%' }}>
-                                {/* Charts */}
-                                {renderVisualization(msg.data, msg.agent)}
-
-                                {/* Table */}
-                                <div style={{ marginTop: 20, overflow: 'hidden', border: '1px solid #eee', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                                    <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
-                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', minWidth: 600 }}>
-                                            <thead style={{ position: 'sticky', top: 0, background: '#f9fafb' }}>
-                                                <tr>
-                                                    {Object.keys(msg.data[0]).map(key => (
-                                                        <th key={key} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#555', borderBottom: '1px solid #eee' }}>{key}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {msg.data.slice(0, 10).map((row, i) => (
-                                                    <tr key={i} style={{ borderBottom: '1px solid #f5f5f5', background: 'white' }}>
-                                                        {Object.values(row).map((val: any, j) => (
-                                                            <td key={j} style={{ padding: '10px 14px', color: '#333' }}>
-                                                                {val !== null ? String(val) : '-'}
-                                                            </td>
-                                                        ))}
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    {msg.data.length > 10 && (
-                                        <div style={{ padding: '8px', textAlign: 'center', fontSize: '0.75rem', color: '#888', background: '#fafafa', borderTop: '1px solid #eee' }}>
-                                            Showing first 10 rows of {msg.data.length}
-                                        </div>
-                                    )}
-                                </div>
+                                {renderVisualization(msg.data)}
+                                {renderTable(msg.data)}
                             </div>
                         )}
-
                     </div>
                 ))}
 
@@ -279,7 +308,6 @@ export default function Home() {
                 <div ref={bottomRef} />
             </div>
 
-            {/* Suggested Queries */}
             <div style={{
                 position: 'fixed', bottom: 80, left: 0, right: 0,
                 zIndex: 10, maxWidth: '900px', margin: '0 auto', pointerEvents: 'none'
@@ -301,7 +329,6 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* Input Area */}
             <div style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0,
                 background: '#fff', padding: '16px 20px', borderTop: '1px solid #eaeaea',

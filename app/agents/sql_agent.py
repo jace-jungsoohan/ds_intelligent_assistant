@@ -228,6 +228,7 @@ ORDER BY 3 DESC
 - If DATE RANGE is missing for trend queries ("추이 알려줘"), ask: `CLARIFICATION_NEEDED: 언제부터 언제까지의 데이터를 조회할까요?`
 - If METRIC is unclear ("물동량 알려줘"), ask: `CLARIFICATION_NEEDED: '출고 건수'(출발 기준)를 원하시나요, 아니면 '운송 건수'(운송 중 포함)를 원하시나요?`
 - For Flow/Connection queries ("~별 ~", "흐름", "연결"), ALWAYS return `source_node` and `target_node` columns to show Sankey Chart.
+- For Ratio Trend queries ("비중 추이", "점유율 추이"), ALWAYS calculate `SAFE_DIVIDE(..., SUM(...) OVER(PARTITION BY date)) * 100 AS share_percentage` to trigger Stacked Bar Chart.
 
 
 Previous Conversation Context:

@@ -89,10 +89,11 @@ Scenario Guidelines (Whitepaper Analytics):
 - **Data Quality**: When querying risk scores (`risk_score`) or damage rates, ALWAYS filter out zero or NULL values (e.g., `WHERE risk_score > 0`) to avoid meaningless results.
 - **Uniqueness**: CRITICAL! When ranking items (e.g. 'Top 5'), YOU MUST use `DISTINCT code` or `GROUP BY code`. Duplicate rows may exist in the source.
 - **Metric Definitions**:
-  - "운송 건수" (Total Shipments): `COUNT(DISTINCT code)` in `mart_logistics_master`.
-  - "운송 중" (In Transit): Not explicitly tracked. If asked, assume all shipments in the period are relevant or mention limitation.
-  - "출고 건수" (Departed Shipments): `COUNT(DISTINCT code)` where `departure_date` matches the period.
-  - "일탈률" (Deviation Rate): Unless specified, use `SAFE_DIVIDE(COUNTIF(risk_level IN ('High', 'Critical')), COUNT(*))` in Master OR `SAFE_DIVIDE(COUNTIF(shock_g >= 5), COUNT(*))` in Sensor Detail.
+  - "출고 건수" (Departed Shipments): Shipments started in period. Query `mart_logistics_master`.
+    -> `SELECT COUNT(DISTINCT code) FROM mart_logistics_master WHERE departure_date BETWEEN 'START' AND 'END'`
+  - "운송 건수" (Active Shipments): Shipments active (moving/logging) in period. Query `mart_sensor_detail`.
+    -> `SELECT COUNT(DISTINCT code) FROM mart_sensor_detail WHERE event_date BETWEEN 'START' AND 'END'`
+  - "일탈률" (Deviation Rate): `SAFE_DIVIDE(COUNTIF(risk_level IN ('High', 'Critical')), COUNT(*))` in Master.
 
 Code Mapping Guide (Fuzzy Matching & Entity Resolution):
 - Shanghai, Sanghai, Sanghi, Shanhai, 상해, 상하이, SH -> 'CNSHG' (or destination LIKE '%Shanghai%')

@@ -89,19 +89,20 @@ Scenario Guidelines (Whitepaper Analytics):
 - **Data Quality**: When querying risk scores (`risk_score`) or damage rates, ALWAYS filter out zero or NULL values (e.g., `WHERE risk_score > 0`) to avoid meaningless results.
 - **Uniqueness**: CRITICAL! When ranking items (e.g. 'Top 5'), YOU MUST use `DISTINCT code` or `GROUP BY code`. Duplicate rows may exist in the source.
 
-Code Mapping Guide (Interpret location names as follows):
-- Shanghai, Sanghai, 상해, 상하이, SH -> 'CNSHG'
-- Osaka, Osaca, 오사카, 오사카항 -> 'JPOSA'
+Code Mapping Guide (Fuzzy Matching & Entity Resolution):
+- Shanghai, Sanghai, Sanghi, Shanhai, 상해, 상하이, SH -> 'CNSHG' (or destination LIKE '%Shanghai%')
+- Osaka, Osaca, Osk, 오사카, 오사카항 -> 'JPOSA'
 - Rizhao, Rizo, 일조, 리자오 -> 'CNRZH'
 - Lianyungang, Lianyun, 연운항 -> 'CNLYG'
 - Ningbo, Ningpo, 닝보 -> 'CNNBG'
-- Hochiminh, HCMC, 호치민 -> 'VNSGN' (or like '%VN%')
-- Haiphong, 하이퐁 -> 'VNHPH'
+- Hochiminh, HCMC, VN SGN, 호치민 -> 'VNSGN'
+- Haiphong, VN HPH, 하이퐁 -> 'VNHPH'
 - Incheon, ICN, 인천 -> 'KRICN'
 - Busan, Pusan, 부산 -> 'KRPUS'
-- China, 중국 -> destination_country = 'China' OR destination LIKE 'CN%'
-- Vietnam, 베트남 -> destination_country = 'Vietnam' OR destination LIKE 'VN%'
-- Japan, 일본 -> destination_country = 'Japan' OR destination LIKE 'JP%'
+- "중국", "China", "CN" -> destination_country = 'China' OR destination LIKE 'CN%'
+- "베트남", "Vietnam", "VN" -> destination_country = 'Vietnam' OR destination LIKE 'VN%'
+- "일본", "Japan", "JP" -> destination_country = 'Japan' OR destination LIKE 'JP%'
+- "미국", "USA", "US" -> destination_country = 'USA' OR destination LIKE 'US%'
 
 Example SQLs (Few-shot Learning):
 1. "🛳️ 해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)

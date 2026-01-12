@@ -130,12 +130,24 @@ SELECT
     COUNTIF(t1.shock_g >= 5) as high_shock_count,
     COUNT(*) as total_sensor_readings,
     SAFE_DIVIDE(COUNTIF(t1.shock_g >= 5), COUNT(*)) as high_shock_ratio
+    SAFE_DIVIDE(COUNTIF(t1.shock_g >= 5), COUNT(*)) as high_shock_ratio
 FROM `willog-prod-data-gold.rag.mart_sensor_detail` t1
 JOIN `willog-prod-data-gold.rag.mart_logistics_master` t2 ON t1.code = t2.code
 WHERE t2.transport_mode LIKE 'ocean%' -- Use LIKE for safety or 'ocean'
 GROUP BY 1
 
-2. "베트남행 화물 중 습도 이탈 구간" (Route/Location Analysis)
+2. "운송경로 별 도착지 흐름" (Sankey Chart)
+-- Flow Analysis queries MUST use aliases: `source_node`, `target_node`, `flow_count` to trigger Sankey Chart.
+SELECT
+    t1.receive_name as source_node, -- "운송경로" maps to receive_name
+    t1.destination as target_node,
+    COUNT(DISTINCT t1.code) as flow_count
+FROM `willog-prod-data-gold.rag.mart_logistics_master` t1
+WHERE t1.departure_date BETWEEN '2025-12-01' AND '2025-12-07'
+GROUP BY 1, 2
+ORDER BY 3 DESC
+
+3. "베트남행 화물 중 습도 이탈 구간" (Route/Location Analysis)
 SELECT lat, lon, COUNT(*) as excursion_count
 FROM `willog-prod-data-gold.rag.mart_sensor_detail`
 WHERE destination LIKE '%VN%' OR destination = 'VNSGN' -- ERROR: Destination not in sensor_detail
@@ -196,7 +208,7 @@ GROUP BY 1, 2
 ORDER BY 1, 2
 
 8. "운송 경로 흐름 분석" (Sankey Flow Chart)
--- To trigger Sankey visualization, use aliases: source_node, target_node.
+-- To trigger Sankey visualization, ALIAS columns as `source_node` and `target_node`.
 SELECT
     'Korea' as source_node,
     destination as target_node,
@@ -209,6 +221,7 @@ ORDER BY 3 DESC
 **Failure Handling (Clarification)**:
 - If DATE RANGE is missing for trend queries ("추이 알려줘"), ask: `CLARIFICATION_NEEDED: 언제부터 언제까지의 데이터를 조회할까요?`
 - If METRIC is unclear ("물동량 알려줘"), ask: `CLARIFICATION_NEEDED: '출고 건수'(출발 기준)를 원하시나요, 아니면 '운송 건수'(운송 중 포함)를 원하시나요?`
+- For Flow/Connection queries ("~별 ~", "흐름", "연결"), ALWAYS return `source_node` and `target_node` columns to show Sankey Chart.
 
 
 Previous Conversation Context:

@@ -91,8 +91,9 @@ Scenario Guidelines (Whitepaper Analytics):
 - **Metric Definitions**:
   - "출고 건수" (Departed Shipments): Shipments started in period. Query `mart_logistics_master`.
     -> `SELECT COUNT(DISTINCT code) FROM mart_logistics_master WHERE departure_date BETWEEN 'START' AND 'END'`
-  - "운송 건수" (Active Shipments): Shipments active (moving/logging) in period. Query `mart_sensor_detail`.
-    -> `SELECT COUNT(DISTINCT code) FROM mart_sensor_detail WHERE event_date BETWEEN 'START' AND 'END'`
+  - "운송 건수" (Active/Total Shipments): Shipments active during the period. Includes those generated before but still in transit or arrived during period.
+    -> Logic: `departure_date <= 'END' AND (arrival_date >= 'START' OR arrival_date IS NULL)` in `mart_logistics_master`.
+    -> Query: `SELECT COUNT(DISTINCT code) FROM mart_logistics_master WHERE departure_date <= 'END' AND (arrival_date >= 'START' OR arrival_date IS NULL)`
   - "일탈률" (Deviation Rate): `SAFE_DIVIDE(COUNTIF(risk_level IN ('High', 'Critical')), COUNT(*))` in Master.
 
 Code Mapping Guide (Fuzzy Matching & Entity Resolution):

@@ -6,8 +6,9 @@
 - **언어**: Python 3.9+
 - **프레임워크**:
     - **LLM 오케스트레이션**: LangChain (Core, Google VertexAI)
-    - **웹 인터페이스**: Streamlit
-    - **데이터 시각화**: Plotly, Streamlit Native Charts
+    - **웹 프론트엔드**: Next.js 14 (React, TypeScript)
+    - **API 백엔드**: FastAPI (Python)
+    - **데이터 시각화**: Recharts (React Library)
 - **인프라**:
     - **클라우드**: Google Cloud Platform (GCP)
     - **컴퓨팅**: Cloud Run (Serverless Container)
@@ -28,8 +29,9 @@
 ### 2.1 아키텍처 다이어그램
 ```mermaid
 graph TD
-    User((사용자)) -->|질문 입력| UI[Streamlit UI]
-    UI -->|대화 이력 + 질문| Orchestrator[오케스트레이터]
+    User((사용자)) -->|질문 입력| Frontend[Next.js Client]
+    Frontend -->|API Request| Backend[FastAPI Server]
+    Backend -->|대화 이력 + 질문| Orchestrator[오케스트레이터]
     
     Orchestrator -->|의도 분류| Router[라우터 에이전트]
     
@@ -45,9 +47,10 @@ graph TD
     
     Retrieval -->|문서 검색| VectorDB[(Vector Store)]
     
-    SQL -->|결과 반환| UI
-    General -->|응답 반환| UI
-    Retrieval -->|정보 반환| UI
+    SQL -->|결과 반환| Backend
+    General -->|응답 반환| Backend
+    Retrieval -->|정보 반환| Backend
+    Backend -->|JSON Response| Frontend
 ```
 
 ### 2.2 데이터 처리 흐름
@@ -120,7 +123,7 @@ flowchart LR
 
 ---
 
-## 4. 💻 UI/UX 디자인 (Streamlit)
+## 4. 💻 UI/UX 디자인 (Next.js)
 
 ### 4.1 메인 인터페이스
 - **채팅 인터페이스**: 카카오톡/슬랙과 유사한 말풍선 UI 적용.
@@ -128,11 +131,11 @@ flowchart LR
 - **사이드바**: LLM 모델 버전, BigQuery 연결 상태, 대화 초기화 버튼 제공.
 
 ### 4.2 주요 기능
-- **추천 질문 그리드**: "상하이행 파손율", "리스크 히트맵" 등 자주 묻는 질문을 3x4 그리드 버튼으로 제공.
-- **자동 시각화 (Smart Visualization)**: 데이터 특성에 따라 차트 자동 생성.
+- **추천 질문 (Suggestion Chips)**: 15개의 시나리오별 추천 질문을 가로 스크롤 칩 형태로 제공.
+- **자동 시각화 (Smart Visualization)**: 데이터 특성에 따라 최적의 차트를 자동으로 선택하여 렌더링 (Recharts).
     - **선 차트 (Line)**: 시계열 데이터 (예: 날짜별 충격 발생 추이).
     - **막대 차트 (Bar)**: 범주형 비교 (예: 국가별 물량, 포장타입별 파손율).
-    - **지도 (Map)**: 위경도(`lat`, `lon`) 데이터가 포함된 경우 Plotly Mapbox로 지도 시각화.
+    - **산점도 (Scatter)**: 위경도(`lat`, `lon`) 데이터가 포함된 경우 좌표 분포 시각화 (히트맵 대체).
 
 ---
 

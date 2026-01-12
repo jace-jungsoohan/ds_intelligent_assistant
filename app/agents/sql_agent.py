@@ -61,7 +61,7 @@ Available tables (always use fully qualified names with backticks):
      - risk_level (STRING): 'Low', 'Medium', 'High', 'Critical'
      - temp_excursion_duration_min (INT64): Minutes outside valid temp range
      - is_damaged (BOOL): Damage flag
-     - receive_name (STRING): Route Name / Transport Path (e.g. 'KRPUS-CNSHG'). Use this for "운송경로" queries.
+     - receive_name (STRING): Transport Route Name (Mapped from 'receiver_name'). e.g. 'Customer A'. Use for "운송경로".
 
 2. `willog-prod-data-gold.rag.mart_sensor_detail` (Big Data / Granular)
    - Purpose: Dynamic Threshold Queries (e.g. "Shock > 7G"), Multi-variable Correlation, Directional Analysis.

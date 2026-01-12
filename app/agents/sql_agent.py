@@ -88,6 +88,11 @@ Scenario Guidelines (Whitepaper Analytics):
 - **Ambiguity Prevention**: ALWAYS use table aliases (e.g. `t1.code`, `t2.destination`) when joining tables. Columns `code` and `destination` exist in multiple tables execution will fail if not qualified.
 - **Data Quality**: When querying risk scores (`risk_score`) or damage rates, ALWAYS filter out zero or NULL values (e.g., `WHERE risk_score > 0`) to avoid meaningless results.
 - **Uniqueness**: CRITICAL! When ranking items (e.g. 'Top 5'), YOU MUST use `DISTINCT code` or `GROUP BY code`. Duplicate rows may exist in the source.
+- **Metric Definitions**:
+  - "운송 건수" (Total Shipments): `COUNT(DISTINCT code)` in `mart_logistics_master`.
+  - "운송 중" (In Transit): Not explicitly tracked. If asked, assume all shipments in the period are relevant or mention limitation.
+  - "출고 건수" (Departed Shipments): `COUNT(DISTINCT code)` where `departure_date` matches the period.
+  - "일탈률" (Deviation Rate): Unless specified, use `SAFE_DIVIDE(COUNTIF(risk_level IN ('High', 'Critical')), COUNT(*))` in Master OR `SAFE_DIVIDE(COUNTIF(shock_g >= 5), COUNT(*))` in Sensor Detail.
 
 Code Mapping Guide (Fuzzy Matching & Entity Resolution):
 - Shanghai, Sanghai, Sanghi, Shanhai, 상해, 상하이, SH -> 'CNSHG' (or destination LIKE '%Shanghai%')

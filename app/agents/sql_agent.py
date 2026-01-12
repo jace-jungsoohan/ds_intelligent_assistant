@@ -100,10 +100,11 @@ Scenario Guidelines (Whitepaper Analytics):
 - **Metric Definitions**:
   - "출고 건수" (Departed Shipments): Shipments started in period. Query `mart_logistics_master`.
     -> `SELECT COUNT(DISTINCT code) FROM mart_logistics_master WHERE departure_date BETWEEN 'START' AND 'END'`
-  - "운송 건수" (Active/Total Shipments): Shipments active during the period. Includes those generated before but still in transit or arrived during period.
-    -> Logic: `departure_date <= 'END' AND (arrival_date >= 'START' OR arrival_date IS NULL)` in `mart_logistics_master`.
-    -> Query: `SELECT COUNT(DISTINCT code) FROM mart_logistics_master WHERE departure_date <= 'END' AND (arrival_date >= 'START' OR arrival_date IS NULL)`
-  - "일탈률" (Deviation Rate): `SAFE_DIVIDE(COUNTIF(risk_level IN ('High', 'Critical')), COUNT(*))` in Master.
+   - "운송 건수" (Active/Total Shipments): Shipments active during the period. Includes those generated before but still in transit or arrived during period.
+     -> CRITICAL: DO NOT use `departure_date BETWEEN`.
+     -> Correct Logic: `departure_date <= 'END' AND (arrival_date >= 'START' OR arrival_date IS NULL)`
+     -> Query: `SELECT COUNT(DISTINCT code) FROM mart_logistics_master WHERE departure_date <= 'END' AND (arrival_date >= 'START' OR arrival_date IS NULL)`
+   - "일탈률" (Deviation Rate): `SAFE_DIVIDE(COUNTIF(risk_level IN ('High', 'Critical')), COUNT(*))` in Master.
 
 Code Mapping Guide (Fuzzy Matching & Entity Resolution):
 - Shanghai, Sanghai, Sanghi, Shanhai, 상해, 상하이, SH -> 'CNSHG' (or destination LIKE '%Shanghai%')
@@ -136,14 +137,19 @@ JOIN `willog-prod-data-gold.rag.mart_logistics_master` t2 ON t1.code = t2.code
 WHERE t2.transport_mode LIKE 'ocean%' -- Use LIKE for safety or 'ocean'
 GROUP BY 1
 
-2. "운송경로 별 도착지 흐름" (Sankey Chart)
--- Flow Analysis queries MUST use aliases: `source_node`, `target_node`, `flow_count` to trigger Sankey Chart.
+WHERE t2.transport_mode LIKE 'ocean%' -- Use LIKE for safety or 'ocean'
+GROUP BY 1
+
+2. "운송경로 별 도착지 흐름" (Sankey Chart + Active Shipments)
+-- Flow Analysis + "운송 건수" (Active) logic
 SELECT
-    t1.receive_name as source_node, -- "운송경로" maps to receive_name
+    t1.receive_name as source_node,
     t1.destination as target_node,
     COUNT(DISTINCT t1.code) as flow_count
 FROM `willog-prod-data-gold.rag.mart_logistics_master` t1
-WHERE t1.departure_date BETWEEN '2025-12-01' AND '2025-12-07'
+WHERE 
+    t1.departure_date <= '2025-12-07' 
+    AND (t1.arrival_date >= '2025-12-01' OR t1.arrival_date IS NULL)
 GROUP BY 1, 2
 ORDER BY 3 DESC
 

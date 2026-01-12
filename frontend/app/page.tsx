@@ -112,15 +112,20 @@ export default function Home() {
         const lonCol = columns.find(c => /lon|lng/i.test(c));
 
         if (latCol && lonCol) {
-            // CRITICAL FIX: Filter valid numeric coordinates to prevent Recharts crash
-            const validData = data.filter(d =>
-                d[latCol] !== null && d[latCol] !== undefined && !isNaN(Number(d[latCol])) &&
-                d[lonCol] !== null && d[lonCol] !== undefined && !isNaN(Number(d[lonCol]))
-            );
+            // Robust Data Mapping: standardizing x/y keys and ensuring numbers
+            const chartData = data
+                .filter(d =>
+                    d[latCol] != null && !isNaN(Number(d[latCol])) &&
+                    d[lonCol] != null && !isNaN(Number(d[lonCol]))
+                )
+                .map((d, i) => ({
+                    id: i,
+                    x: Number(d[lonCol]), // Longitude as X
+                    y: Number(d[latCol]), // Latitude as Y
+                    ...d // Keep original data for tooltip
+                }));
 
-            if (validData.length === 0) return null;
-
-            const valCol = columns.find(c => c !== latCol && c !== lonCol && typeof data[0][c] === 'number');
+            if (chartData.length === 0) return null;
 
             return (
                 <div style={{ height: 400, width: '100%', marginTop: 20 }}>
@@ -129,16 +134,16 @@ export default function Home() {
                         <ResponsiveContainer width="100%" height="100%">
                             <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis type="number" dataKey={lonCol} name="Longitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
-                                <YAxis type="number" dataKey={latCol} name="Latitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
+                                <XAxis type="number" dataKey="x" name="Longitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
+                                <YAxis type="number" dataKey="y" name="Latitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
                                 <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 8 }} />
                                 <Legend />
-                                <Scatter name={valCol || "Locations"} data={validData} fill="#ff7300" line={false} />
+                                <Scatter name="Locations" data={chartData} fill="#ff7300" isAnimationActive={false} />
                             </ScatterChart>
                         </ResponsiveContainer>
                     </div>
                     <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#999', marginTop: 5 }}>
-                        * Displaying {validData.length} valid points
+                        * Displaying {chartData.length} valid points
                     </div>
                 </div>
             );

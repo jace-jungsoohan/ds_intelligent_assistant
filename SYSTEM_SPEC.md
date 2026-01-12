@@ -1,4 +1,4 @@
-# 📘 Willog Intelligent Assistant - 시스템 기술 명세서
+# 📘 Willog Intelligence Assistant - 시스템 기술 명세서
 
 ## 1. 🛠️ 개발 스펙 (Development Specs)
 

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router as api_router
 from app.core.config import settings
 
-app = FastAPI(title="Willog AI Assistant API", version="1.0.0")
+app = FastAPI(title="Willog Intelligence Assistant API", version="1.0.0")
 
 # CORS Configuration
 # In production, replace "*" with specific domain

@@ -1,8 +1,8 @@
-# 🚀 Willog Intelligent Assistant 개발 현황 보고서
+# 🚀 Willog Intelligence Assistant 개발 현황 보고서
 
 ## 📅 2026년 1월 10일 기준
 
-본 문서는 현재까지 개발된 **Willog 물류 데이터 지능형 비서** 서비스의 주요 기능, 아키텍처 개선 사항, 그리고 배포 현황을 정리한 것입니다.
+본 문서는 현재까지 개발된 **Willog Intelligence Assistant** 서비스의 주요 기능, 아키텍처 개선 사항, 그리고 배포 현황을 정리한 것입니다.
 
 ---
 
@@ -58,7 +58,7 @@ Whitepaper 시나리오 분석을 지원하기 위해 Raw 데이터를 목적에
 
 ## 3. 🔗 접속 정보
 
-*   **서비스 URL**: [Willog Assistant 바로가기](https://willog-assistant-753372497836.asia-northeast3.run.app)
+*   **서비스 URL**: [Willog Intelligence Assistant 바로가기](https://willog-assistant-753372497836.asia-northeast3.run.app)
 *   **연동 데이터**: Willog Production Gold Data (`bigquery.willog-prod-data-gold`)
 
 ---

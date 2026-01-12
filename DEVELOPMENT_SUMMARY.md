@@ -1,5 +1,5 @@
 
-# DS Intelligent Assistant - 개발 현황 요약
+# Willog Intelligence Assistant - 개발 현황 요약
 
 ## 📅 작성일: 2026-01-08
 

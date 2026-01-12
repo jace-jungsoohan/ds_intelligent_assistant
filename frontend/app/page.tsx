@@ -33,7 +33,7 @@ const SUGGESTIONS = [
 
 export default function Home() {
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'assistant', content: '안녕하세요! Willog AI Assistant입니다. 무엇을 도와드릴까요?' }
+        { role: 'assistant', content: '안녕하세요! Willog Intelligence Assistant입니다. 무엇을 도와드릴까요?' }
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -242,7 +242,7 @@ export default function Home() {
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 24, height: 24, background: '#007AFF', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: 14 }}>W</div>
-                    <h1 style={{ margin: 0, fontSize: '1.1rem', color: '#111', fontWeight: 600 }}>Willog AI Assistant</h1>
+                    <h1 style={{ margin: 0, fontSize: '1.1rem', color: '#111', fontWeight: 600 }}>Willog Intelligence Assistant</h1>
                 </div>
             </header>
 

@@ -37,6 +37,11 @@ You are a BigQuery expert for a logistics company named Willog.
 Your goal is to answer user questions by generating a valid Standard SQL query.
 
 Dataset: `willog-prod-data-gold.rag`
+ 
+**Failure Handling**:
+- If the user's question is ambiguous (e.g., uses undefined terms like "배송 건수" without context) or requires more details (e.g., "Show me data" without date/route), do NOT generate SQL.
+- Instead, output: `CLARIFICATION_NEEDED: <Reason and Question to user>`
+- Example: `CLARIFICATION_NEEDED: "배송 건수"가 정확히 어떤 의미인가요? '출고 건수'(출발 기준)인가요, 아니면 '운송 건수'(운송 중 포함)인가요?`
 
 Available tables (always use fully qualified names with backticks):
 
@@ -111,6 +116,8 @@ Code Mapping Guide (Fuzzy Matching & Entity Resolution):
 - "베트남", "Vietnam", "VN" -> destination_country = 'Vietnam' OR destination LIKE 'VN%'
 - "일본", "Japan", "JP" -> destination_country = 'Japan' OR destination LIKE 'JP%'
 - "미국", "USA", "US" -> destination_country = 'USA' OR destination LIKE 'US%'
+- "배송 건수", "배송량" -> Same as "출고 건수" (Departed Shipments)
+- "물동량" -> Can be "출고 건수" or "운송 건수" depending on context, default to "출고 건수".
 
 Example SQLs (Few-shot Learning):
 1. "🛳️ 해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)
@@ -253,12 +260,21 @@ class SQLAgent:
         
         clean_sql = generated_sql.replace("```sql", "").replace("```", "").strip()
         
+        if "CLARIFICATION_NEEDED:" in clean_sql:
+            return {
+                "question": question,
+                "generated_sql": "",
+                "result": None,
+                "natural_response": clean_sql.replace("CLARIFICATION_NEEDED:", "").strip(),
+                "error": None
+            }
+
         if not clean_sql:
             return {
                 "question": question,
                 "generated_sql": "",
                 "result": None,
-                "natural_response": "SQL 생성 실패: 질문을 이해하지 못했습니다.",
+                "natural_response": "질문을 이해하는데 어려움이 있습니다. 조금 더 구체적으로(기간, 조건 등) 말씀해 주실 수 있나요?",
                 "error": "Empty SQL generated"
             }
         

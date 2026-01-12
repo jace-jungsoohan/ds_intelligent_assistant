@@ -10,3 +10,15 @@ streamlit
 plotly
 fastapi
 uvicorn
+reportlab
+pypdf
+faiss-cpu
+langchain
+langchain-google-vertexai
+langchain-community
+google-cloud-bigquery
+pandas
+pydantic-settings
+db-dtypes
+streamlit
+plotly

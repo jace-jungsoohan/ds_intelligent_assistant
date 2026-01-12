@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-    LineChart, Line, BarChart, Bar, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    LineChart, Line, BarChart, Bar, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    PieChart, Pie, Cell
 } from 'recharts';
 
 interface Message {
@@ -193,7 +194,41 @@ export default function Home() {
                 );
             }
 
-            // 3. Comparison (Bar Chart)
+            // 3. Pie Chart (Aggregated Ratio/Share)
+            // Trigger: No Date + Category + Number (Preferably small number of categories)
+            if (!dateCol && catCol && numCol) {
+                const colors = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
+
+                return (
+                    <div style={{ height: 350, width: '100%', marginTop: 20 }}>
+                        <h4 style={{ marginBottom: 10, color: '#444' }}>🍩 Proportion Analysis ({catCol})</h4>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={data}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    outerRadius={120}
+                                    innerRadius={60} // Donut style
+                                    fill="#8884d8"
+                                    dataKey={numCol}
+                                    nameKey={catCol}
+                                >
+                                    {data.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ borderRadius: 8 }} itemStyle={{ color: '#333' }} />
+                                <Legend layout="vertical" verticalAlign="middle" align="right" />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                );
+            }
+
+            // 4. Comparison (Bar Chart) - Fallback
             if (catCol && numCol) {
                 return (
                     <div style={{ height: 300, width: '100%', marginTop: 20 }}>

@@ -45,6 +45,7 @@ Available tables (always use fully qualified names with backticks):
    - Columns: 
      - code (STRING): Shipment ID
      - departure_date (DATE): Partition Key - use for time filtering (e.g., "이번 달", "최근 1주일")
+     - arrival_date (DATE): Arrival Date (CRITICAL for "운송 건수" / active shipments queries)
      - destination (STRING): Port code (e.g., 'CNSHG')
      - product (STRING)
      - transport_mode (STRING): 'air', 'truck', 'ocean+ferry', 'ocean+rail' (Note: Raw data is lowercase. 'ocean' often appears in composites.)
@@ -164,6 +165,12 @@ WHERE cumulative_shock_index IS NOT NULL
 ORDER BY cumulative_shock_index DESC
 LIMIT 5
 
+6. "이번 달 운송 건수 및 출고 건수 비교" (Active vs Departed)
+SELECT
+    COUNT(DISTINCT CASE WHEN t1.departure_date BETWEEN '2025-11-01' AND '2025-11-30' THEN t1.code END) as departed_count,
+    COUNT(DISTINCT CASE WHEN t1.departure_date <= '2025-11-30' AND (t1.arrival_date >= '2025-11-01' OR t1.arrival_date IS NULL) THEN t1.code END) as active_transport_count
+FROM `willog-prod-data-gold.rag.mart_logistics_master` t1
+WHERE t1.departure_date <= '2025-11-30'
 
 
 Previous Conversation Context:

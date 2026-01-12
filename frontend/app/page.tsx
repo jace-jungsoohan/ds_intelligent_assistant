@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     LineChart, Line, BarChart, Bar, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-    PieChart, Pie, Cell
+    PieChart, Pie, Cell, Sankey
 } from 'recharts';
 
 interface Message {
@@ -245,6 +245,47 @@ export default function Home() {
                         </ResponsiveContainer>
                     </div>
                 );
+            }
+
+            // 5. Sankey Chart (Flow: Source -> Target)
+            const sourceCol = columns.find(c => c.includes('source') || c.includes('start') || c.includes('departure') || c.includes('출발'));
+            const targetCol = columns.find(c => c.includes('target') || c.includes('end') || c.includes('destination') || c.includes('도착'));
+            // Ensure numCol exists (already defined above)
+
+            if (sourceCol && targetCol && numCol && !dateCol) {
+                // Transform flat data to { nodes: [], links: [] }
+                const nodes = new Set<string>();
+                data.forEach(d => {
+                    nodes.add(d[sourceCol]);
+                    nodes.add(d[targetCol]);
+                });
+
+                const nodeList = Array.from(nodes).map((n, i) => ({ name: n, index: i }));
+                const nodeMap = new Map(nodeList.map(n => [n.name, n.index]));
+
+                const links = data.map(d => ({
+                    source: nodeMap.get(d[sourceCol]),
+                    target: nodeMap.get(d[targetCol]),
+                    value: Number(d[numCol])
+                })).filter(l => l.source !== undefined && l.target !== undefined && l.value > 0);
+
+                if (links.length > 0) {
+                    const sankeyData = { nodes: nodeList, links };
+                    return (
+                        <div style={{ height: 400, width: '100%', marginTop: 20 }}>
+                            <h4 style={{ marginBottom: 10, color: '#444' }}>🌊 Flow Analysis (Sankey)</h4>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <Sankey
+                                    data={sankeyData}
+                                    node={{ stroke: '#77c878', strokeWidth: 2 }}
+                                    link={{ stroke: '#77c878' }}
+                                >
+                                    <Tooltip />
+                                </Sankey>
+                            </ResponsiveContainer>
+                        </div>
+                    );
+                }
             }
 
             return null;

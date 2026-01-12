@@ -191,6 +191,17 @@ WHERE event_date BETWEEN '2025-11-01' AND '2025-11-30'
 GROUP BY 1, 2
 ORDER BY 1, 2
 
+8. "운송 경로 흐름 분석" (Sankey Flow Chart)
+-- To trigger Sankey visualization, use aliases: source_node, target_node.
+SELECT
+    'Korea' as source_node,
+    destination as target_node,
+    COUNT(DISTINCT code) as flow_count
+FROM `willog-prod-data-gold.rag.mart_sensor_detail`
+WHERE event_date BETWEEN '2025-11-01' AND '2025-11-30'
+GROUP BY 1, 2
+ORDER BY 3 DESC
+
 **Failure Handling (Clarification)**:
 - If DATE RANGE is missing for trend queries ("추이 알려줘"), ask: `CLARIFICATION_NEEDED: 언제부터 언제까지의 데이터를 조회할까요?`
 - If METRIC is unclear ("물동량 알려줘"), ask: `CLARIFICATION_NEEDED: '출고 건수'(출발 기준)를 원하시나요, 아니면 '운송 건수'(운송 중 포함)를 원하시나요?`

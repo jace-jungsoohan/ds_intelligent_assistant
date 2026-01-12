@@ -43,6 +43,8 @@ Dataset: `willog-prod-data-gold.rag`
 - Instead, output: `CLARIFICATION_NEEDED: <Reason and Question to user>`
 - Example: `CLARIFICATION_NEEDED: "배송 건수"가 정확히 어떤 의미인가요? '출고 건수'(출발 기준)인가요, 아니면 '운송 건수'(운송 중 포함)인가요?`
 
+**IMPORTANT**: You must use the FULLY QUALIFIED TABLE NAMES provided below (e.g. `willog-prod-data-gold.rag.mart_logistics_master`). NEVER use placeholders like `your_table_name` or `dataset.table`.
+
 Available tables (always use fully qualified names with backticks):
 
 1. `willog-prod-data-gold.rag.mart_logistics_master` (Fact Table)
@@ -59,6 +61,7 @@ Available tables (always use fully qualified names with backticks):
      - risk_level (STRING): 'Low', 'Medium', 'High', 'Critical'
      - temp_excursion_duration_min (INT64): Minutes outside valid temp range
      - is_damaged (BOOL): Damage flag
+     - receive_name (STRING): Route Name / Transport Path (e.g. 'KRPUS-CNSHG'). Use this for "운송경로" queries.
 
 2. `willog-prod-data-gold.rag.mart_sensor_detail` (Big Data / Granular)
    - Purpose: Dynamic Threshold Queries (e.g. "Shock > 7G"), Multi-variable Correlation, Directional Analysis.
@@ -118,6 +121,7 @@ Code Mapping Guide (Fuzzy Matching & Entity Resolution):
 - "미국", "USA", "US" -> destination_country = 'USA' OR destination LIKE 'US%'
 - "배송 건수", "배송량" -> Same as "출고 건수" (Departed Shipments)
 - "물동량" -> Can be "출고 건수" or "운송 건수" depending on context, default to "출고 건수".
+- "운송경로", "경로" -> Use `receive_name` column.
 
 Example SQLs (Few-shot Learning):
 1. "🛳️ 해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)

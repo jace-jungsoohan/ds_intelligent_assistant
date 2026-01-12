@@ -91,7 +91,11 @@ export default function Home() {
 
             const dateCol = columns.find(c => c.toLowerCase().includes('date') || c.toLowerCase().includes('day') || c.toLowerCase().includes('time') || c.toLowerCase().includes('month'));
             const numCol = columns.find(c => typeof data[0][c] === 'number' && !c.toLowerCase().includes('lat') && !c.toLowerCase().includes('lon'));
-            const catCol = columns.find(c => typeof data[0][c] === 'string' && !c.toLowerCase().includes('date') && !c.toLowerCase().includes('timestamp') && !c.toLowerCase().includes('time'));
+            const catCols = columns.filter(c => typeof data[0][c] === 'string' && !c.toLowerCase().includes('date') && !c.toLowerCase().includes('time'));
+            const catCol = catCols.length > 0 ? catCols[0] : undefined;
+
+            const sourceCol = columns.find(c => c.includes('source') || c.includes('start') || c.includes('departure') || c.includes('출발'));
+            const targetCol = columns.find(c => c.includes('target') || c.includes('end') || c.includes('destination') || c.includes('도착'));
 
             // 0. Stacked Trend Chart (Ratio/Share over Time)
             // Trigger: Date + Number(Ratio/Percent) + Category
@@ -137,7 +141,72 @@ export default function Home() {
                 );
             }
 
-            // 1. Time Series (Line Chart)
+            // 1. Heatmap (Category vs Category)
+            // Trigger: No Date + 2 Categories + Number
+            if (!dateCol && catCols.length >= 2 && numCol && !sourceCol) {
+                const xCol = catCols[0];
+                const yCol = catCols[1];
+
+                // Pivot data for heatmap
+                const xValues = Array.from(new Set(data.map(d => d[xCol]))).sort();
+                const yValues = Array.from(new Set(data.map(d => d[yCol]))).sort();
+                const valueMap = new Map();
+                let maxValue = 0;
+
+                data.forEach(d => {
+                    const key = `${d[xCol]}-${d[yCol]}`;
+                    const val = Number(d[numCol]);
+                    valueMap.set(key, val);
+                    if (val > maxValue) maxValue = val;
+                });
+
+                return (
+                    <div style={{ width: '100%', marginTop: 20, overflowX: 'auto' }}>
+                        <h4 style={{ marginBottom: 10, color: '#444' }}>🔥 Heatmap Analysis ({xCol} vs {yCol})</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: `auto repeat(${xValues.length}, 1fr)`, gap: 4, minWidth: 500 }}>
+                            {/* Header Row */}
+                            <div />
+                            {xValues.map(x => (
+                                <div key={x} style={{ textAlign: 'center', fontSize: '0.8rem', fontWeight: 600, padding: 5, color: '#555' }}>
+                                    {x}
+                                </div>
+                            ))}
+
+                            {/* Data Rows */}
+                            {yValues.map(y => (
+                                <React.Fragment key={y}>
+                                    <div style={{ textAlign: 'right', fontSize: '0.8rem', fontWeight: 600, padding: 8, color: '#555', whiteSpace: 'nowrap' }}>
+                                        {y}
+                                    </div>
+                                    {xValues.map(x => {
+                                        const val = valueMap.get(`${x}-${y}`) || 0;
+                                        const intensity = val / (maxValue || 1);
+                                        const bgColor = val > 0 ? `rgba(0, 122, 255, ${0.1 + intensity * 0.9})` : '#f5f5f5';
+                                        const textColor = intensity > 0.6 ? 'white' : '#333';
+
+                                        return (
+                                            <div key={`${x}-${y}`} style={{
+                                                background: bgColor,
+                                                color: textColor,
+                                                borderRadius: 6,
+                                                padding: 10,
+                                                textAlign: 'center',
+                                                fontSize: '0.85rem',
+                                                transition: 'transform 0.1s',
+                                                cursor: 'default'
+                                            }} title={`${x} - ${y}: ${val}`}>
+                                                {val > 0 ? val : '-'}
+                                            </div>
+                                        );
+                                    })}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+
+            // 2. Time Series (Line Chart)
             if (dateCol && numCol) {
                 return (
                     <div style={{ height: 300, width: '100%', marginTop: 20 }}>
@@ -248,8 +317,6 @@ export default function Home() {
             }
 
             // 5. Sankey Chart (Flow: Source -> Target)
-            const sourceCol = columns.find(c => c.includes('source') || c.includes('start') || c.includes('departure') || c.includes('출발'));
-            const targetCol = columns.find(c => c.includes('target') || c.includes('end') || c.includes('destination') || c.includes('도착'));
             // Ensure numCol exists (already defined above)
 
             if (sourceCol && targetCol && numCol && !dateCol) {

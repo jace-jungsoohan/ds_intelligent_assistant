@@ -137,6 +137,8 @@ Code Mapping Guide (Fuzzy Matching & Entity Resolution):
      Query: `SELECT t1.code, SUM(POW(t2.shock_g, 1.5)) as cumulative_shock_index FROM mart_logistics_master t1 JOIN mart_sensor_detail t2 ON t1.code = t2.code WHERE t2.shock_g >= THRESHOLD ... GROUP BY 1`
 - "위치 시각화", "지도", "발생 위치" -> Must include `lat`, `lon` columns.
   Query: `SELECT ROUND(lat, 2) as lat, ROUND(lon, 2) as lon, COUNT(*) as count FROM mart_sensor_detail WHERE ... GROUP BY 1, 2`
+- "운송구간 리스크 히트맵", "구간별 충격 히트맵" -> Matrix Heatmap (Segment vs Shock Level).
+  Query: `SELECT location_fin_corrected as segment, CASE WHEN shock_g >= 10 THEN 'Critical (10G+)' WHEN shock_g >= 7 THEN 'High (7-10G)' WHEN shock_g >= 5 THEN 'Medium (5-7G)' ELSE 'Low' END as shock_level, COUNT(*) as count FROM mart_sensor_detail WHERE location_fin_corrected IS NOT NULL AND shock_g >= 3 GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 50`
 
 Example SQLs (Few-shot Learning):
 1. "🛳️ 해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)

@@ -141,6 +141,10 @@ Code Mapping Guide (Fuzzy Matching & Entity Resolution):
   Query: `SELECT location_fin_corrected as segment, CASE WHEN shock_g >= 10 THEN 'Critical (10G+)' WHEN shock_g >= 7 THEN 'High (7-10G)' WHEN shock_g >= 5 THEN 'Medium (5-7G)' ELSE 'Low' END as shock_level, COUNT(*) as count FROM mart_sensor_detail WHERE location_fin_corrected IS NOT NULL AND shock_g >= 3 GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 50`
 - "벤치마킹", "품질 비교" + Date Range (e.g. "4분기", "12월") -> DO NOT use `mart_quality_matrix` (No date col). Use `mart_logistics_master`.
   Query: `SELECT receive_name as carrier, COUNT(*) as total_shipments, AVG(cumulative_shock_index) as avg_fatigue, countif(is_damaged)/count(*) as damage_rate FROM mart_logistics_master WHERE departure_date BETWEEN 'START' AND 'END' GROUP BY 1`
+- "과도한 기울기", "Tilt" -> If no degree specified, default to > 45 degrees.
+  Query: `SELECT code, COUNT(*) as tilt_events FROM mart_sensor_detail WHERE (ABS(tilt_x) > 45 OR ABS(tilt_y) > 45) ...`
+- "최근", "Latest" -> Refers to the latest available data period (Nov-Dec 2025), NOT 2026.
+  -> `arrival_date BETWEEN '2025-11-01' AND '2025-12-31'`
 
 Example SQLs (Few-shot Learning):
 1. "🛳️ 해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)

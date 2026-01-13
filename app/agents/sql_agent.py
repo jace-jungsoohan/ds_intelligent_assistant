@@ -67,10 +67,12 @@ Available tables (always use fully qualified names with backticks):
    - Purpose: Dynamic Threshold Queries (e.g. "Shock > 7G"), Multi-variable Correlation, Directional Analysis.
    - Columns: 
      - event_date (DATE): Partition Key - use for time filtering
+     - event_timestamp (TIMESTAMP)
      - code (STRING): Shipment ID (Join Key)
-     - destination (STRING): Port code
+     - destination (STRING): Destination port code.
+     - location_fin_corrected (STRING): Transport Segment / Corrected Location Name. Use for "운송구간".
      - destination_country (STRING): 'China', 'Japan', 'Vietnam', 'Korea', 'USA', 'Other'
-     - transport_mode (STRING): 'air', 'truck', 'ocean+ferry', 'ocean+rail' - DIRECTLY AVAILABLE. Use lowercase or LIKE '%ocean%'.
+     - transport_mode (STRING): Copied from master.
      - shock_g (FLOAT), temperature (FLOAT), humidity (FLOAT)
      - acc_x, acc_y, acc_z (FLOAT): Directional acceleration
      - tilt_x, tilt_y (FLOAT): Tilt angles
@@ -123,6 +125,7 @@ Code Mapping Guide (Fuzzy Matching & Entity Resolution):
 - "배송 건수", "배송량" -> Same as "출고 건수" (Departed Shipments)
 - "물동량" -> Can be "출고 건수" or "운송 건수" depending on context, default to "출고 건수".
 - "운송경로", "경로" -> Use `receive_name` column.
+- "운송구간", "구간" -> Use `location_fin_corrected` column in `mart_sensor_detail`.
 
 Example SQLs (Few-shot Learning):
 1. "🛳️ 해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)

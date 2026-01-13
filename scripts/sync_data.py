@@ -126,7 +126,10 @@ def sync_whitepaper_mart():
         CASE 
             WHEN m.acc < 0.2 THEN 'Static'
             ELSE 'Moving'
-        END as status
+        END as status,
+        
+        -- Added per user request: "운송구간"
+        m.location_fin_corrected
         
     FROM `{dataset_id}.corning_merged` m
     LEFT JOIN `{dataset_id}.corning_transport` t ON m.code = t.code

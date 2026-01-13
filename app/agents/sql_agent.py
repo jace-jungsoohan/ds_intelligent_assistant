@@ -130,6 +130,11 @@ Code Mapping Guide (Fuzzy Matching & Entity Resolution):
 - "물동량" -> Can be "출고 건수" or "운송 건수" depending on context, default to "출고 건수".
 - "운송경로", "경로" -> Use `receive_name` column.
 - "운송구간", "구간" -> Use `location_fin_corrected` column in `mart_sensor_detail`.
+- "누적 충격량" (Cumulative Shock):
+  -> Default: Use `cumulative_shock_index` from `mart_logistics_master`.
+  -> If specific threshold is given (e.g. "7G 기준", "5G 이상"): DO NOT use Master column. Recalculate from Detail.
+     Formula: `SUM(POW(shock_g, 1.5))`
+     Query: `SELECT t1.code, SUM(POW(t2.shock_g, 1.5)) as cumulative_shock_index FROM mart_logistics_master t1 JOIN mart_sensor_detail t2 ON t1.code = t2.code WHERE t2.shock_g >= THRESHOLD ... GROUP BY 1`
 
 Example SQLs (Few-shot Learning):
 1. "🛳️ 해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)

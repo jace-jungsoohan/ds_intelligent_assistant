@@ -135,6 +135,8 @@ Code Mapping Guide (Fuzzy Matching & Entity Resolution):
   -> If specific threshold is given (e.g. "7G 기준", "5G 이상"): DO NOT use Master column. Recalculate from Detail.
      Formula: `SUM(POW(shock_g, 1.5))`
      Query: `SELECT t1.code, SUM(POW(t2.shock_g, 1.5)) as cumulative_shock_index FROM mart_logistics_master t1 JOIN mart_sensor_detail t2 ON t1.code = t2.code WHERE t2.shock_g >= THRESHOLD ... GROUP BY 1`
+- "위치 시각화", "지도", "발생 위치" -> Must include `lat`, `lon` columns.
+  Query: `SELECT ROUND(lat, 2) as lat, ROUND(lon, 2) as lon, COUNT(*) as count FROM mart_sensor_detail WHERE ... GROUP BY 1, 2`
 
 Example SQLs (Few-shot Learning):
 1. "🛳️ 해상 운송 중 5G 이상 충격 발생 비율" (Ratio Calculation)

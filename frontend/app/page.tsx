@@ -113,7 +113,39 @@ export default function Home() {
             const sourceCol = columns.find(c => c.includes('source') || c.includes('start') || c.includes('departure') || c.includes('출발'));
             const targetCol = columns.find(c => c.includes('target') || c.includes('end') || c.includes('destination') || c.includes('도착'));
 
-            // 0. Stacked Trend Chart (Ratio/Share over Time)
+            // Geo Columns
+            const latCol = columns.find(c => c.toLowerCase().includes('lat') || c.toLowerCase().includes('latitude'));
+            const lonCol = columns.find(c => c.toLowerCase().includes('lon') || c.toLowerCase().includes('longitude'));
+
+            // 0. Geospatial Scatter Chart (Map-like)
+            // Trigger: Lat + Lon cols
+            if (latCol && lonCol) {
+                // If there's a category column (like code), use it for tooltip or coloring if possible.
+                // Assuming numCol is the 'size' (e.g. count, shock_g)
+                return (
+                    <div style={{ height: 450, width: '100%', marginTop: 20 }}>
+                        <h4 style={{ marginBottom: 10, color: '#444' }}>🌍 Geospatial Analysis ({latCol}, {lonCol})</h4>
+                        <div style={{ marginBottom: 10, fontSize: '0.8rem', color: '#666' }}>
+                            * Showing distribution by coordinates. (Background map not available)
+                        </div>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis type="number" dataKey={lonCol} name="Longitude" unit="°" domain={['auto', 'auto']} />
+                                <YAxis type="number" dataKey={latCol} name="Latitude" unit="°" domain={['auto', 'auto']} />
+                                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                                <Scatter name="Events" data={data} fill="#8884d8">
+                                    {data.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={index % 2 === 0 ? "#8884d8" : "#82ca9d"} />
+                                    ))}
+                                </Scatter>
+                            </ScatterChart>
+                        </ResponsiveContainer>
+                    </div>
+                );
+            }
+
+            // 1. Stacked Trend Chart (Ratio/Share over Time)
             // Trigger: Date + Number(Ratio/Percent) + Category
             const isRatio = numCol && (numCol.includes('ratio') || numCol.includes('share') || numCol.includes('percent') || numCol.includes('비중'));
 
@@ -157,7 +189,7 @@ export default function Home() {
                 );
             }
 
-            // 1. Heatmap (Category vs Category)
+            // 2. Heatmap (Category vs Category)
             // Trigger: No Date + 2 Categories + Number
             if (!dateCol && catCols.length >= 2 && numCol && !sourceCol) {
                 const xCol = catCols[0];

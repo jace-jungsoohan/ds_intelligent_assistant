@@ -273,43 +273,7 @@ export default function Home() {
                 );
             }
 
-            // 2. Geospatial (Scatter Chart)
-            const latCol = columns.find(c => /lat/i.test(c));
-            const lonCol = columns.find(c => /lon|lng/i.test(c));
 
-            if (latCol && lonCol) {
-                const chartData = data
-                    .filter(d => d && d[latCol] != null && d[lonCol] != null && !isNaN(Number(d[latCol])) && !isNaN(Number(d[lonCol])))
-                    .map((d, i) => ({
-                        id: i,
-                        x: Number(d[lonCol]),
-                        y: Number(d[latCol]),
-                        ...d
-                    }));
-
-                if (chartData.length === 0) return null;
-
-                return (
-                    <div style={{ height: 400, width: '100%', marginTop: 20 }}>
-                        <h4 style={{ marginBottom: 10, color: '#444' }}>🗺️ Geospatial Distribution</h4>
-                        <div style={{ background: '#f9f9f9', borderRadius: 12, padding: 10, height: '100%', border: '1px solid #eee' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis type="number" dataKey="x" name="Longitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
-                                    <YAxis type="number" dataKey="y" name="Latitude" domain={['auto', 'auto']} fontSize={12} unit="°" />
-                                    <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 8 }} />
-                                    <Legend />
-                                    <Scatter name="Locations" data={chartData} fill="#ff7300" isAnimationActive={false} />
-                                </ScatterChart>
-                            </ResponsiveContainer>
-                        </div>
-                        <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#999', marginTop: 5 }}>
-                            * Displaying {chartData.length} valid points
-                        </div>
-                    </div>
-                );
-            }
 
             // 3. Pie Chart (Aggregated Ratio/Share)
             // Trigger: No Date + Category + Number (Preferably small number of categories)
@@ -326,7 +290,7 @@ export default function Home() {
                                     cx="50%"
                                     cy="50%"
                                     labelLine={false}
-                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
                                     outerRadius={120}
                                     innerRadius={60} // Donut style
                                     fill="#8884d8"

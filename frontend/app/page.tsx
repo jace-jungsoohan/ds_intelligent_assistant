@@ -5,6 +5,9 @@ import {
     LineChart, Line, BarChart, Bar, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     PieChart, Pie, Cell, Sankey
 } from 'recharts';
+import dynamic from 'next/dynamic';
+
+const MapComponent = dynamic(() => import('./MapComponent'), { ssr: false });
 
 interface Message {
     role: 'user' | 'assistant';
@@ -123,24 +126,12 @@ export default function Home() {
                 // If there's a category column (like code), use it for tooltip or coloring if possible.
                 // Assuming numCol is the 'size' (e.g. count, shock_g)
                 return (
-                    <div style={{ height: 450, width: '100%', marginTop: 20 }}>
+                    <div style={{ width: '100%', marginTop: 20 }}>
                         <h4 style={{ marginBottom: 10, color: '#444' }}>🌍 Geospatial Analysis ({latCol}, {lonCol})</h4>
                         <div style={{ marginBottom: 10, fontSize: '0.8rem', color: '#666' }}>
-                            * Showing distribution by coordinates. (Background map not available)
+                            * Visualization on OpenStreetMap
                         </div>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis type="number" dataKey={lonCol} name="Longitude" unit="°" domain={['auto', 'auto']} />
-                                <YAxis type="number" dataKey={latCol} name="Latitude" unit="°" domain={['auto', 'auto']} />
-                                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                                <Scatter name="Events" data={data} fill="#8884d8">
-                                    {data.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={index % 2 === 0 ? "#8884d8" : "#82ca9d"} />
-                                    ))}
-                                </Scatter>
-                            </ScatterChart>
-                        </ResponsiveContainer>
+                        <MapComponent data={data} latCol={latCol} lonCol={lonCol} numCol={numCol} />
                     </div>
                 );
             }

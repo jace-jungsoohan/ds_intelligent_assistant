@@ -240,6 +240,42 @@ WHERE event_date BETWEEN '2025-11-01' AND '2025-11-30'
 GROUP BY 1, 2
 ORDER BY 3 DESC
 
+9. "베트남행 출고 건수 Top 5 제품"
+SELECT
+    product,
+    COUNT(DISTINCT code) as count
+FROM `willog-prod-data-gold.rag.mart_logistics_master`
+WHERE 
+    (destination LIKE 'VN%' OR destination_country = 'Vietnam')
+    AND departure_date BETWEEN 'START' AND 'END'
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 5
+
+10. "오사카행 온도 이탈 평균 지속 시간"
+SELECT
+    avg(temp_excursion_duration_min) as avg_duration,
+    count(distinct code) as shipment_count
+FROM `willog-prod-data-gold.rag.mart_logistics_master`
+WHERE 
+    (destination = 'JPOSA' OR destination LIKE '%Osaka%')
+    AND departure_date BETWEEN 'START' AND 'END'
+
+11. "베트남 경로 습도 취약 구간 분석"
+SELECT 
+    location_fin_corrected as segment,
+    AVG(humidity) as avg_humidity,
+    MAX(humidity) as max_humidity,
+    COUNT(*) as log_count
+FROM `willog-prod-data-gold.rag.mart_sensor_detail`
+WHERE 
+    (destination LIKE 'VN%' OR destination_country = 'Vietnam')
+    AND location_fin_corrected IS NOT NULL
+GROUP BY 1
+HAVING log_count > 10
+ORDER BY 2 DESC
+LIMIT 10
+
 **Failure Handling (Clarification)**:
 - If DATE RANGE is missing for trend queries ("추이 알려줘"), ask: `CLARIFICATION_NEEDED: 언제부터 언제까지의 데이터를 조회할까요?`
 - If METRIC is unclear ("물동량 알려줘"), ask: `CLARIFICATION_NEEDED: '출고 건수'(출발 기준)를 원하시나요, 아니면 '운송 건수'(운송 중 포함)를 원하시나요?`

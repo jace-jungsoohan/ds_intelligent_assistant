@@ -90,13 +90,21 @@ export default function Home() {
             if (columns.length === 0) return null;
 
             const dateCol = columns.find(c => c.toLowerCase().includes('date') || c.toLowerCase().includes('day') || c.toLowerCase().includes('time') || c.toLowerCase().includes('month'));
-            // Improved NumCol detection: Check type OR column name hints
-            let numCol = columns.find(c => typeof data[0][c] === 'number' && !c.toLowerCase().includes('lat') && !c.toLowerCase().includes('lon'));
+
+            // NumCol detection: PRIORITIZE ratio/share columns for Stacked Bar Chart
+            let numCol = columns.find(c =>
+                (typeof data[0][c] === 'number' || !isNaN(Number(data[0][c]))) &&
+                (c.includes('ratio') || c.includes('share') || c.includes('percent') || c.includes('비중'))
+            );
+            // Fallback: any numeric column (excluding lat/lon)
             if (!numCol) {
-                // Fallback: look for columns that look like numbers (parseable) or have specific keywords
+                numCol = columns.find(c => typeof data[0][c] === 'number' && !c.toLowerCase().includes('lat') && !c.toLowerCase().includes('lon'));
+            }
+            // Second Fallback: parseable number with keyword hints
+            if (!numCol) {
                 numCol = columns.find(c => {
                     const val = data[0][c];
-                    return !isNaN(Number(val)) && (c.includes('count') || c.includes('ratio') || c.includes('share') || c.includes('percent') || c.includes('비중') || c.includes('건수'));
+                    return !isNaN(Number(val)) && (c.includes('count') || c.includes('건수'));
                 });
             }
             const catCols = columns.filter(c => typeof data[0][c] === 'string' && !c.toLowerCase().includes('date') && !c.toLowerCase().includes('time') && c !== numCol);

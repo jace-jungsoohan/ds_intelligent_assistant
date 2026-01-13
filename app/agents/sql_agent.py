@@ -105,8 +105,12 @@ Scenario Guidelines (Whitepaper Analytics):
    - "운송 건수" (Active/Total Shipments): Shipments active during the period. Includes those generated before but still in transit or arrived during period.
      -> CRITICAL: DO NOT use `departure_date BETWEEN`.
      -> Correct Logic: `departure_date <= 'END' AND (arrival_date >= 'START' OR arrival_date IS NULL)`
+     -> Correct Logic: `departure_date <= 'END' AND (arrival_date >= 'START' OR arrival_date IS NULL)`
      -> Query: `SELECT COUNT(DISTINCT code) FROM mart_logistics_master WHERE departure_date <= 'END' AND (arrival_date >= 'START' OR arrival_date IS NULL)`
-   - "일탈률" (Deviation Rate): `SAFE_DIVIDE(COUNTIF(risk_level IN ('High', 'Critical')), COUNT(*))` in Master.
+   - "일탈률" (Deviation Rate/Excursion Rate):
+     -> If Aggregated (Daily/Monthly): `SAFE_DIVIDE(COUNTIF(risk_level IN ('High', 'Critical')), COUNT(*))` in Master.
+     -> If by Shipment/Code ("관리번호별 일탈률"): Calculate Sensor Log Excursion Rate.
+        Query: `SELECT code, SAFE_DIVIDE(COUNTIF(shock_g >= 5 OR temperature < 2 OR temperature > 8), COUNT(*)) as excursion_rate FROM mart_sensor_detail GROUP BY code`
 
 Code Mapping Guide (Fuzzy Matching & Entity Resolution):
 - Shanghai, Sanghai, Sanghi, Shanhai, 상해, 상하이, SH -> 'CNSHG' (or destination LIKE '%Shanghai%')

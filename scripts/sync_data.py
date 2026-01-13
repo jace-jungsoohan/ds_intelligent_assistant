@@ -60,6 +60,7 @@ def sync_whitepaper_mart():
       t.product_name as product,
       t.package as package_type,
       t.shipmode as transport_mode,
+      t.receiver_name as receive_name,
       DATE(t.arrival_time) as arrival_date,
       
       c.filter as category_filter,
@@ -106,6 +107,7 @@ def sync_whitepaper_mart():
         END as destination_country,
         -- Added: Transport mode from master for direct queries
         t.shipmode as transport_mode,
+        t.receiver_name as receive_name,
         
         m.temperature,
         m.humidity,
